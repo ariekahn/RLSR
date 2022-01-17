@@ -201,14 +201,14 @@ function run_trials(agent::Agent, ntrials::Int)
     run_trials(agent, startstates)
 end
 
-function run_trials!(agent::Agent, startstates::Vector{Int}, agentRecord::AbstractRecord, episodeRecord::Vector{Episode})
+function run_trials!(agent::Agent, startstates::Vector{Int}, agentRecord::R, episodeRecord::Vector{Episode}) where {R<:AbstractRecord}
     for s in startstates
         push!(agentRecord, agent.model)
         episode = active_episode!(agent, s)
         push!(episodeRecord, episode)
     end
 end
-function run_trials!(agent::Agent, ntrials::Int, agentRecord::AbstractRecord, episodeRecord::Vector{Episode})
+function run_trials!(agent::Agent, ntrials::Int, agentRecord::R, episodeRecord::Vector{Episode}) where {R<:AbstractRecord}
     startstates = make_alternate_starts(ntrials)
     run_trials!(agent, startstates, agentRecord, episodeRecord)
 end
@@ -222,7 +222,7 @@ function passive_trials!(agent::Agent, episodeRecord::Vector{Episode})
     agentRecord
 end
 
-function passive_trials!(agent::Agent, agentRecord::AbstractRecord, episodeRecord::Vector{Episode})
+function passive_trials!(agent::Agent, agentRecord::R, episodeRecord::Vector{Episode}) where {R<:AbstractRecord}
     for episode in episodeRecord
         push!(agentRecord, agent.model)
         passive_episode!(agent, episode)
