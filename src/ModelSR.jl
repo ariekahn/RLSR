@@ -134,3 +134,61 @@ function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::I
 end
 
 function update_model_end!(::Agent{E, M, P}, ::Episode) where {E, M <: AbstractSR, P} end
+
+# Snapshot code
+struct SRModelSnapshot <: AbstractModelSnapshop
+    V::Vector{Float64}
+    M::Matrix{Float64}
+end
+function SRModelSnapshot(model::SRModel)
+    SRModelSnapshot(copy(model.V), copy(model.M))
+end
+mutable struct SRModelRecord{E <: AbstractEnv, P <: AbstractPolicy} <: AbstractRecord
+    env::E
+    policy::P
+    V::Matrix{Float64}
+    M::Array{Float64, 3}
+    n::Int
+end
+function SRModelRecord(agent::Agent{E,M,P}, maxsize::Int)::SRModelRecord where {E <: AbstractEnv, M <: SRModel, P <: AbstractPolicy}
+    SRModelRecord(
+        agent.env,
+        agent.policy,
+        zeros(maxsize, length(agent.env)),
+        zeros(maxsize, length(agent.env), length(agent.env)),
+        0)
+end
+Base.firstindex(record::SRModelRecord) = 1
+Base.lastindex(record::SRModelRecord) = length(record)
+Base.length(record::SRModelRecord) = record.n
+function Base.push!(record::SRModelRecord, model::SRModel)
+    record.n += 1
+    (sx, sy) = size(record.V)
+    if record.n > sx
+        new_V = zeros(sx * 2, sy)
+        new_V[1:sx, :] .= record.V
+        record.V = new_V
+
+        new_M = zeros(sx * 2, sy, sy)
+        new_M[1:sx, :, :] .= record.M
+        record.M = new_M
+    end
+    record.V[record.n, :] = model.V[:]
+    record.M[record.n, :, :] = model.M[:, :]
+end
+function Base.iterate(record::SRModelRecord, state=1)
+    if state > length(record)
+        nothing
+    else
+        (SRModelSnapshot(record.V[state, :], record.M[state, :, :]), state+1)
+    end
+end
+function Base.getindex(record::SRModelRecord, i::Int)
+    1 <= i <= length(record) || throw(BoundsError(record, i))
+    SRModelSnapshot(record.V[i, :], record.M[i, :, :])
+end
+Base.getindex(record::SRModelRecord, I) = SRModelRecord(record.env, record.policy, record.V[I, :], record.M[I, I, :], length(I))
+
+function Record(agent::Agent{E, M, P}, maxsize::Int)::SRModelRecord where {E, M <: SRModel, P}
+    SRModelRecord(agent, maxsize)
+end

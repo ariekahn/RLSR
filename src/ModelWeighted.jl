@@ -1,4 +1,3 @@
-abstract type AbstractWeightedModel <: AbstractModel end
 struct WeightedModel <: AbstractWeightedModel
     V::Vector{Float64}
     Q::Vector{Float64}
@@ -46,6 +45,12 @@ end
 function WeightedModelSoftmax(env, models, weights; β)
     model = WeightedModel(models, weights)
     policy = PolicySoftmax(β)
+    Agent(env, model, policy)
+end
+
+function WeightedModelTwoStepSoftmax(env, models, weights; β1, β2)
+    model = WeightedModel(models, weights)
+    policy = PolicyTwoStepSoftmax(β1, β2)
     Agent(env, model, policy)
 end
 

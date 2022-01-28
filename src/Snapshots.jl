@@ -1,7 +1,7 @@
-struct ModelSnapshot <: AbstractModel
+struct ModelSnapshot <: AbstractModelSnapshop
     V::Vector{Float64}
 end
-function ModelSnapshot(model::AbstractModel)
+function ModelSnapshot(model::M) where {M<:AbstractModel}
     ModelSnapshot(copy(model.V))
 end
 
@@ -11,7 +11,7 @@ mutable struct ModelRecord{E <: AbstractEnv, P <: AbstractPolicy} <: AbstractRec
     V::Matrix{Float64}
     n::Int
 end
-function ModelRecord(agent::Agent, maxsize::Int)::ModelRecord
+function ModelRecord(agent::Agent{E,M,P}, maxsize::Int)::ModelRecord where {E <: AbstractEnv, M <: AbstractModel, P <: AbstractPolicy}
     ModelRecord(
         agent.env,
         agent.policy,

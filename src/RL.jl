@@ -23,6 +23,8 @@ abstract type AbstractGraphEnv <: AbstractEnv end
 abstract type AbstractPolicy end
 abstract type AbstractModel end
 abstract type AbstractRecord end
+abstract type AbstractWeightedModel <: AbstractModel end
+abstract type AbstractModelSnapshop <: AbstractModel end
 
 Base.length(model::M) where {M <: AbstractModel} = length(model.V)
 
@@ -35,6 +37,7 @@ include("ModelSRTD.jl")
 include("ModelMB.jl")
 include("ModelMFTD.jl")
 include("ModelWeighted.jl")
+include("SRMBTD0TD1WeightedModel.jl")
 include("Snapshots.jl")
 include("Dataframes.jl")
 include("Plotting.jl")
@@ -43,7 +46,7 @@ export AbstractEnv, AbstractGraphEnv, AbstractPolicy, AbstractModel
 export GraphEnv, GraphEnvStochastic, GraphEnvStochasticBinary
 export sample_reward, get_reward_state, update_rewards!, drift_rewards!
 export Observation, Episode
-export PolicyGreedy, Policy_ϵ_Greedy, PolicySoftmax
+export PolicyGreedy, Policy_ϵ_Greedy, PolicySoftmax, PolicyTwoStepSoftmax
 export Agent, model_name, policy_name, active_episode!, passive_episode!, blind_episode
 export plot_graph, plot_graph_full, plot_values, plot_values_full
 
@@ -51,8 +54,9 @@ export SRModel, SR_ϵ_Greedy, SRGreedy, SRSoftmax
 export SRTDModel, SRTD_ϵ_Greedy, SRTDGreedy, SRTDSoftmax
 export MBModel, MB_ϵ_Greedy, MBGreedy, MBSoftmax
 export MFTDModel, MFTD_ϵ_Greedy, MFTDGreedy, MFTDSoftmax
-export WeightedModel, WeightedModel_ϵ_Greedy, WeightedModelGreedy, WeightedModelSoftmax
-export ModelSnapshot, ModelRecord
+export SRMBTD0TD1WeightedModel, SRMBTD0TD1WeightedAgent
+export WeightedModel, WeightedModel_ϵ_Greedy, WeightedModelTwoStepSoftmax, WeightedModelGreedy, WeightedModelSoftmax
+export ModelSnapshot, ModelRecord, Record
 export RunToDataFrame
 
 function make_env(rewards::Vector{Float64}=[0.5, 0.5, 0.5, 0.5])
