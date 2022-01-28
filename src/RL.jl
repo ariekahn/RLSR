@@ -250,7 +250,24 @@ function run_trials_drift(agent::Agent, ntrials::Int, σ; lb, ub)
     run_trials_drift(agent, startstates, σ; lb=lb, ub=ub)
 end
 
-export run_trials_drift
+function run_trials_drift!(agent::Agent, startstates::Vector{Int}, σ, agentRecord::R, episodeRecord::Vector{Episode}; lb, ub) where {R<:AbstractRecord}
+    envRecord = zeros(length(startstates), 4)
+    for (i, s) in enumerate(startstates)
+        push!(agentRecord, agent.model)
+        episode = active_episode!(agent, s)
+        push!(episodeRecord, episode)
+        envRecord[i, :] = get_reward_state(agent.env)
+        drift_rewards!(agent.env, σ; lb=lb, ub=ub)
+    end
+    envRecord
+end
+
+function run_trials_drift!(agent::Agent, ntrials::Int, σ, agentRecord::R, episodeRecord::Vector{Episode}; lb, ub) where {R<:AbstractRecord}
+    startstates = make_alternate_starts(ntrials)
+    run_trials_drift!(agent, startstates, σ, agentRecord::R, episodeRecord::Vector{Episode}; lb=lb, ub=ub)
+end
+
+export run_trials_drift, run_trials_drift!
 
 function zscore(x)
     (x .- mean(x)) ./ std(x)
