@@ -1,8 +1,3 @@
-function bound(v::Vector{Float64})::Vector{Float64}
-    v_bounded = v .- minimum(v)
-    v_bounded = v_bounded ./ maximum(v_bounded)
-end
-
 function plot_graph(env::E; title="") where E <: AbstractGraphEnv
     nonterminal = findall(.!env.terminal_states)
     p = gplot(env.graph[nonterminal], env.x_coords[nonterminal], 
@@ -27,7 +22,7 @@ end
 
 function plot_values(env::E, values; title="") where E <: AbstractGraphEnv
     nonterminal = findall(.!env.terminal_states)
-    colors = get(colorschemes[:viridis], bound(values[nonterminal]))
+    colors = get(colorschemes[:viridis], values, :extrema)
     labels = [@sprintf("%.2f", f) for f in values[nonterminal]]
     p = gplot(env.graph[nonterminal], env.x_coords[nonterminal], 
               env.y_coords[nonterminal], nodefillc=colors, nodelabel=labels, 
@@ -43,7 +38,7 @@ end
 
 function plot_values_full(env::E, values; title="") where E <: AbstractGraphEnv
     w = colorschemes[:viridis]
-    colors = get(colorschemes[:viridis], bound(values))
+    colors = get(colorschemes[:viridis], values, :extrema)
     labels = [@sprintf("%.2f", f) for f in values]
     p = gplot(env.graph, env.x_coords, env.y_coords, nodefillc=colors, nodelabel=labels,
               nodelabelc=colorant"black", NODELABELSIZE=4, nodelabeldist=2, nodelabelangleoffset=pi/2)
