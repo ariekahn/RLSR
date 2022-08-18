@@ -111,7 +111,7 @@ function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::I
     SR.trace[s] = SR.trace[s] + 1
 
     # Update M first
-    # δM is our state misprediction: Iₛ + γ M_s' vs. M_s
+    # δM is our state misprediction: (Iₛ + γ M_s') vs. (M_s)
     # Move each state's prediction in the direction of δM based on the trace
     δM = SR.ident[s, :] + SR.γ .* SR.M[s′, :] - SR.M[s, :]
     # The Iₛ cancels out, leaving us with γM_s′.
