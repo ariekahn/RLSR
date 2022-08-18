@@ -273,10 +273,6 @@ end
 
 export run_trials_drift, run_trials_drift!
 
-function zscore(x)
-    (x .- mean(x)) ./ std(x)
-end
-
 function softmaximum(a, b, β)
     p= 1 / (1 + exp(-β*(a - b)))
     p*a + (1-p)*b
@@ -286,6 +282,6 @@ function unitnorm(x)
     0.5 + 0.5 * erf(x / sqrt(2))
 end
 
-export zscore, softmaximum, unitnorm
+export softmaximum, unitnorm
 
 end
