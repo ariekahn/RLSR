@@ -37,7 +37,7 @@ include("ModelSRTD.jl")
 include("ModelMB.jl")
 include("ModelMFTD.jl")
 include("ModelWeighted.jl")
-include("SRMBTD0TD1WeightedModel.jl")
+include("TD0TD1SRMBWeightedModel.jl")
 include("Snapshots.jl")
 include("Dataframes.jl")
 include("Plotting.jl")
@@ -54,7 +54,7 @@ export SRModel, SR_ϵ_Greedy, SRGreedy, SRSoftmax
 export SRTDModel, SRTD_ϵ_Greedy, SRTDGreedy, SRTDSoftmax
 export MBModel, MB_ϵ_Greedy, MBGreedy, MBSoftmax
 export MFTDModel, MFTD_ϵ_Greedy, MFTDGreedy, MFTDSoftmax
-export SRMBTD0TD1WeightedModel, SRMBTD0TD1WeightedAgent
+export TD0TD1SRMBWeightedModel, TD0TD1SRMBWeightedAgent
 export WeightedModel, WeightedModel_ϵ_Greedy, WeightedModelTwoStepSoftmax, WeightedModelGreedy, WeightedModelSoftmax
 export ModelSnapshot, ModelRecord, Record
 export RunToDataFrame

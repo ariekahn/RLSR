@@ -76,14 +76,14 @@ end
 function policy_name(policy::PolicyTwoStepSoftmax) "Softmax" end
 
 
-struct PolicySRMBMFTD0TD1TwoStepSoftmax <: AbstractPolicy
-    βSR::Float64
-    βMB::Float64
+struct PolicyTD0TD1SRMBTwoStepSoftmax <: AbstractPolicy
     βTD0::Float64
     βTD1::Float64
+    βSR::Float64
+    βMB::Float64
     βBoat::Float64
 end
-function sample_successor(env::AbstractEnv, model::AbstractModel, policy::PolicySRMBMFTD0TD1TwoStepSoftmax, s::Int)::Union{Int, Nothing}
+function sample_successor(env::AbstractEnv, model::AbstractModel, policy::PolicyTD0TD1SRMBTwoStepSoftmax, s::Int)::Union{Int, Nothing}
     neighbors = find_neighbors(env, s)
     if isempty(neighbors)
         nothing
@@ -99,4 +99,4 @@ function sample_successor(env::AbstractEnv, model::AbstractModel, policy::Policy
         end
     end
 end
-function policy_name(policy::PolicySRMBMFTD0TD1TwoStepSoftmax) "SRMBMFTD0TD1TwoStepSoftmax" end
+function policy_name(policy::PolicyTD0TD1SRMBTwoStepSoftmax) "TD0TD1SRMBwoStepSoftmax" end
