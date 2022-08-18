@@ -9,9 +9,9 @@ function RunToDataFrame(episode_record::Vector{Episode}; subject=0)
     df.state2 = [ep.S[2] < 8 ? ep.S[2] : missing for ep in episode_record]
     df.state3 = [length(ep.S) > 2 && ep.S[3] < 8 ? ep.S[3] : missing for ep in episode_record]
 
-    # endState is 4-7
-    df.endState = [ep.S[end-1] for ep in episode_record]
-    df.endBranchLeft = [ep.S[end-1] < 6 for ep in episode_record]
+    # endState is 2-7 (2/3 for island-only trials, 4-7 for other trials)
+    df.endState = [ep.S[end] > 3 ? ep.S[end-1] : ep.S[end] for ep in episode_record]
+    df.endBranchLeft = [(ep.S[end] == 2) || (ep.S[end-1] == 4) || (ep.S[end-1] == 5) for ep in episode_record]
     df.reward = [ep.R[end] for ep in episode_record]
 
     # As it stands, an even state means we went left, odd right
@@ -45,11 +45,17 @@ function RunToDataFrame(episode_record::Vector{Episode}; subject=0)
     priorMoveVec = Vector{Union{Missing, Int}}(missing, 3)
     for (i, ep) in enumerate(episode_record)
         if ep.S[1] == 1
-            endstate = ep.S[end]
-            choice_1 = 2 + (endstate > 9)  # 2 or 3
-            choice_2 = endstate - 4  # 4,5,6,7
-            priorMoveVec[1] = choice_1
-            priorMoveVec[choice_1] = choice_2
+            # If a full traversal, update moves for start and island
+            if length(ep.S) > 2
+                endstate = ep.S[end]
+                choice_1 = 2 + (endstate > 9)  # 2 or 3
+                choice_2 = endstate - 4  # 4,5,6,7
+                priorMoveVec[1] = choice_1
+                priorMoveVec[choice_1] = choice_2
+            # Otherwise just update moves for start
+            else
+                priorMoveVec[1] = ep.S[2]
+            end
         end
         priorMoveMat[i, :] = priorMoveVec[:]
     end
@@ -61,7 +67,9 @@ function RunToDataFrame(episode_record::Vector{Episode}; subject=0)
     # df.priorMoveAt3Left = mod.(df[!, :priorMoveAt3], 2) .== 0
     # Prior to the current episode, what was the most recent move at the parent
     # of the state we finished this episode in?
-    parentMap = Dict(4 => :priorMoveAt2,
+    parentMap = Dict(2 => :priorMoveAt1,
+                     3 => :priorMoveAt1,
+                     4 => :priorMoveAt2,
                      5 => :priorMoveAt2,
                      6 => :priorMoveAt3,
                      7 => :priorMoveAt3)
@@ -73,20 +81,29 @@ function RunToDataFrame(episode_record::Vector{Episode}; subject=0)
     
     ######
     # Prior to the current episode, what was the reward observed at a given state?
-    priorRewardMat = Matrix{Union{Missing, Float64}}(missing, length(episode_record), 4)
-    priorRewardVec = Vector{Union{Missing, Float64}}(missing, 4)
+    priorRewardMat = Matrix{Union{Missing, Float64}}(missing, length(episode_record), 6)
+    priorRewardVec = Vector{Union{Missing, Float64}}(missing, 6)
     for (i, ep) in enumerate(episode_record)
-        ind = ep.S[end] - 7
-        priorRewardVec[ind] = ep.R[end]
+        if ep.S[end] > 3  # For trials that end on boats, 8 -> 3, 9 -> 4, 10 -> 5, 11 -> 6
+            ind = ep.S[end] - 5
+            priorRewardVec[ind] = ep.R[end]
+        else  # For trials that end on islands, 2 -> 1, 3 -> 2
+            ind = ep.S[end] - 1
+            priorRewardVec[ind] = ep.R[end]
+        end
         priorRewardMat[i, :] = priorRewardVec[:]
     end
     # If at trial 10, priorRewardAtX contains the last update including trial 9
-    df.priorRewardAt4 = lag(priorRewardMat[:, 1])
-    df.priorRewardAt5 = lag(priorRewardMat[:, 2])
-    df.priorRewardAt6 = lag(priorRewardMat[:, 3])
-    df.priorRewardAt7 = lag(priorRewardMat[:, 4])
+    df.priorRewardAt2 = lag(priorRewardMat[:, 1])
+    df.priorRewardAt3 = lag(priorRewardMat[:, 2])
+    df.priorRewardAt4 = lag(priorRewardMat[:, 3])
+    df.priorRewardAt5 = lag(priorRewardMat[:, 4])
+    df.priorRewardAt6 = lag(priorRewardMat[:, 5])
+    df.priorRewardAt7 = lag(priorRewardMat[:, 6])
     # Which index in recentRewardMat should each end-state look into?
-    rewardSiblingMap = Dict(4 => :priorRewardAt5,
+    rewardSiblingMap = Dict(2 => :priorRewardAt3,
+                            3 => :priorRewardAt2,
+                            4 => :priorRewardAt5,
                             5 => :priorRewardAt4,
                             6 => :priorRewardAt7,
                             7 => :priorRewardAt6)
@@ -94,7 +111,9 @@ function RunToDataFrame(episode_record::Vector{Episode}; subject=0)
     df.endStateSiblingPriorReward = [df[i, rewardSiblingMap[df[i, :endState]]] for i in 1:nrow(df)]
     df.endStateSiblingPriorRewardₜ₋₁ = lag(df[!, :endStateSiblingPriorReward])
     # 
-    rewardMap = Dict(4 => :priorRewardAt4,
+    rewardMap = Dict(2 => :priorRewardAt2,
+                     3 => :priorRewardAt3,
+                     4 => :priorRewardAt4,
                      5 => :priorRewardAt5,
                      6 => :priorRewardAt6,
                      7 => :priorRewardAt7)
@@ -109,14 +128,18 @@ function RunToDataFrame(episode_record::Vector{Episode}; subject=0)
     priorRewardBranchMat = Matrix{Union{Missing, Float64}}(missing, length(episode_record), 2)
     priorRewardBranchVec = Vector{Union{Missing, Float64}}(missing, 2)
     for (i, ep) in enumerate(episode_record)
-        ind = 1 + (ep.S[end] > 9)
-        priorRewardBranchVec[ind] = ep.R[end]
+        if ep.S[end] > 3
+            ind = 1 + (ep.S[end] > 9)
+            priorRewardBranchVec[ind] = ep.R[end]
+        end
         priorRewardBranchMat[i, :] = priorRewardBranchVec[:]
     end
     df.priorRewardLeftBranch = lag(priorRewardBranchMat[:, 1])
     df.priorRewardRightBranch = lag(priorRewardBranchMat[:, 2])
     # Which index in priorRewardBranchMat should each end-state look into?
-    rewardBranchMap = Dict(4 => :priorRewardLeftBranch,
+    rewardBranchMap = Dict(2 => :priorRewardLeftBranch,
+                           3 => :priorRewardRightBranch,
+                           4 => :priorRewardLeftBranch,
                            5 => :priorRewardLeftBranch,
                            6 => :priorRewardRightBranch,
                            7 => :priorRewardRightBranch)
