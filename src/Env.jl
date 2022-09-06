@@ -34,35 +34,35 @@ struct GraphEnvStochasticBinary <: AbstractGraphEnv
     R::Vector{Float64}
 end
 
-function GraphEnv(A::Matrix{M}, x_coords::Vector{Float64}, y_coords::Vector{Float64}, R::Vector{Float64}) where M <: Number
-    terminal = sum(A, dims=2)[:, 1] .== 0
+function GraphEnv(A::Matrix, x_coords::Vector{Float64}, y_coords::Vector{Float64}, R::Vector{Float64})
+    terminal = sum(A; dims=2)#[:, 1]# .== 0
     neighbors = Dict{Int, Vector{Int}}()
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
     end
-    GraphEnv(SimpleDiGraph(A), A * 1.0, terminal, neighbors, x_coords, y_coords, R)
+    GraphEnv(SimpleDiGraph(A), A, terminal, neighbors, x_coords, y_coords, R)
 end
 
-function GraphEnvStochastic(A::Matrix{M},
+function GraphEnvStochastic(A::Matrix,
                             x_coords::Vector{Float64}, y_coords::Vector{Float64},
-                            R_μ::Vector{Float64}, R_σ::Vector{Float64}) where M <: Number
+                            R_μ::Vector{Float64}, R_σ::Vector{Float64})
     terminal = sum(A, dims=2)[:, 1] .== 0
     neighbors = Dict{Int, Vector{Int}}()
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
     end
-    GraphEnvStochastic(SimpleDiGraph(A), A * 1.0, terminal, neighbors, x_coords, y_coords, R_μ, R_σ)
+    GraphEnvStochastic(SimpleDiGraph(A), A, terminal, neighbors, x_coords, y_coords, R_μ, R_σ)
 end
 
-function GraphEnvStochasticBinary(A::Matrix{M},
+function GraphEnvStochasticBinary(A::Matrix,
                                   x_coords::Vector{Float64}, y_coords::Vector{Float64},
-                                  isrewarded::Union{Vector{Bool}, Vector{Int}}, R::Vector{Float64}) where M <: Number
+                                  isrewarded::Union{Vector{Bool}, Vector{Int}}, R::Vector{Float64})
     terminal = sum(A, dims=2)[:, 1] .== 0
     neighbors = Dict{Int, Vector{Int}}()
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
     end
-    GraphEnvStochasticBinary(SimpleDiGraph(A), A * 1.0, terminal, neighbors, x_coords, y_coords, isrewarded, R)
+    GraphEnvStochasticBinary(SimpleDiGraph(A), A, terminal, neighbors, x_coords, y_coords, isrewarded, R)
 end
 
 """
@@ -71,7 +71,7 @@ such that all valid transitions from a state sum to 1
 """
 function stochastic_matrix(env::E)::Matrix{Float64} where E <: AbstractGraphEnv
     T = env.adjacency_matrix
-    for r in 1:size(T, 1)
+    for r in axes(T, 1)
         s = sum(T[r, :])
         if s > 0
             T[r, :] /= s
