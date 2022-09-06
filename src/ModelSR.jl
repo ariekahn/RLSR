@@ -17,7 +17,7 @@ function SRModel(env, α, αM, γ, λ)
     M = inv(I(n) - γ * stochastic_matrix(env))
     # Set M to zero for the dummy terminal states
     # Ensures that they won't affect our weight estimates or norming
-    M[:, env.terminal_states] .= 0
+    view(M, :, env.terminal_states) .= 0
     # Ident is used every step, save ourselves from reallocating
     ident = Matrix{Float64}(I, n, n)
     trace = zeros(n)
@@ -166,7 +166,7 @@ function Base.push!(record::SRModelRecord, model::SRModel)
     (sx, sy) = size(record.V)
     if record.n > sx
         new_V = zeros(sx * 2, sy)
-        new_V[1:sx, :] .= record.V
+        view(new_V, 1:sx, :) .= record.V
         record.V = new_V
 
         new_M = zeros(sx * 2, sy, sy)
