@@ -1,7 +1,7 @@
-name = "RL"
+name = "RLSR"
 uuid = "12caab6f-4f98-46d1-9c4e-53723d5eaddb"
 authors = ["Ari Kahn <ari.e.kahn@gmail.com>"]
-version = "0.1.0"
+version = "1.0.0"
 
 [deps]
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"

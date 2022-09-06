@@ -1,4 +1,4 @@
-module RL
+module RLSR
 
 using LinearAlgebra
 using LightGraphs
