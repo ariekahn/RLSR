@@ -1,4 +1,4 @@
-struct WeightedModel <: AbstractWeightedModel
+struct WeightedModel <: AbstractWeightedStateModel
     V::Vector{Float64}
     Q::Vector{Float64}
     models
@@ -21,7 +21,7 @@ end
 function WeightedModel(models, weights)
     WeightedModel(zeros(length(models[1].V)), zeros(length(models[1].V)), models, weights)
 end
-function model_name(model::M; show_weights=false, kwargs...) where {M <: AbstractWeightedModel}
+function model_name(model::M; show_weights=false, kwargs...) where {M <: AbstractWeightedStateModel}
     name = "WeightedModel: ["
     for (i, (m, w)) ∈ enumerate(zip(model.models, model.weights))
         if i > 1
@@ -39,56 +39,56 @@ end
 function WeightedModel_ϵ_Greedy(env, models, weights; ϵ)
     model = WeightedModel(models, weights)
     policy = Policy_ϵ_Greedy(ϵ)
-    Agent(env, model, policy)
+    StateAgent(env, model, policy)
 end
 
 function WeightedModelSoftmax(env, models, weights; β)
     model = WeightedModel(models, weights)
     policy = PolicySoftmax(β)
-    Agent(env, model, policy)
+    StateAgent(env, model, policy)
 end
 
 function WeightedModelTwoStepSoftmax(env, models, weights; β1, β2)
     model = WeightedModel(models, weights)
     policy = PolicyTwoStepSoftmax(β1, β2)
-    Agent(env, model, policy)
+    StateAgent(env, model, policy)
 end
 
 function WeightedModelGreedy(env, models, weights)
     model = WeightedModel(models, weights)
     policy = PolicyGreedy()
-    Agent(env, model, policy)
+    StateAgent(env, model, policy)
 end
 
-function reaverage_models!(agent::Agent{E, M, P}) where {E, M <: WeightedModel, P}
+function reaverage_models!(agent::StateAgent{E, M, P}) where {E, M <: WeightedModel, P}
     agent.model.V[:] = sum([m.V * w for (m, w) in zip(agent.model.models, agent.model.weights)])
     agent.model.Q[:] = sum([m.Q * w for (m, w) in zip(agent.model.models, agent.model.weights)])
 end
 
-function update_model_start!(agent::Agent{E, M, P}) where {E, M <: WeightedModel, P}
+function update_model_start!(agent::StateAgent{E, M, P}) where {E, M <: WeightedModel, P}
     for m ∈ agent.model.models
-        update_model_start!(Agent(agent.env, m, agent.policy))
+        update_model_start!(StateAgent(agent.env, m, agent.policy))
     end
     reaverage_models!(agent)
 end
 
-function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: WeightedModel, P}
+function update_model_step!(agent::StateAgent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: WeightedModel, P}
     for m ∈ agent.model.models
-        update_model_step!(Agent(agent.env, m, agent.policy), s, reward, s′)
+        update_model_step!(StateAgent(agent.env, m, agent.policy), s, reward, s′)
     end
     reaverage_models!(agent)
 end
 
-function update_model_step_blind!(agent::Agent{E, M, P}, s::Int, s′::Int) where {E, M <: WeightedModel, P}
+function update_model_step_blind!(agent::StateAgent{E, M, P}, s::Int, s′::Int) where {E, M <: WeightedModel, P}
     for m ∈ agent.model.models
-        update_model_step_blind!(Agent(agent.env, m, agent.policy), s, s′)
+        update_model_step_blind!(StateAgent(agent.env, m, agent.policy), s, s′)
     end
     reaverage_models!(agent)
 end
 
-function update_model_end!(agent::Agent{E, M, P}, episode::Episode) where {E, M <: WeightedModel, P}
+function update_model_end!(agent::StateAgent{E, M, P}, episode::Episode) where {E, M <: WeightedModel, P}
     for m ∈ agent.model.models
-        update_model_end!(Agent(agent.env, m, agent.policy), episode)
+        update_model_end!(StateAgent(agent.env, m, agent.policy), episode)
     end
     reaverage_models!(agent)
 end

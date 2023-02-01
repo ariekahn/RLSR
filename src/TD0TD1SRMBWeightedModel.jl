@@ -1,4 +1,4 @@
-struct TD0TD1SRMBWeightedModel <: AbstractWeightedModel
+struct TD0TD1SRMBWeightedStateModel <: AbstractWeightedStateModel
     TD0Model::MFTDModel
     TD1Model::MFTDModel
     SRModel::SRModel
@@ -10,8 +10,8 @@ struct TD0TD1SRMBWeightedModel <: AbstractWeightedModel
     QSR::Vector{Float64}
     QMB::Vector{Float64}
 end
-function TD0TD1SRMBWeightedModel(TD0Model, TD1Model, SRModel, MBModel)
-    TD0TD1SRMBWeightedModel(
+function TD0TD1SRMBWeightedStateModel(TD0Model, TD1Model, SRModel, MBModel)
+    TD0TD1SRMBWeightedStateModel(
         TD0Model, TD1Model, SRModel, MBModel,
         zeros(length(TD0Model.V)),
         zeros(length(TD0Model.V)),
@@ -21,21 +21,25 @@ function TD0TD1SRMBWeightedModel(TD0Model, TD1Model, SRModel, MBModel)
     )
     
 end
-function model_name(model::M; kwargs...) where {M <: TD0TD1SRMBWeightedModel}
-    "TD0TD1SRMBWeightedModel: [βTD0: $(model.βTD0) βTD1: $(βTD1) βSR: $(model.βSR) βMB: $(model.βMB)]"
+function model_name(agent::StateAgent{E, M, P}; kwargs...) where {E, M <: TD0TD1SRMBWeightedStateModel, P <: PolicyTD0TD1SRMBTwoStepSoftmax}
+    policy_str = ": [βTD0: $(agent.policy.βTD0) βTD1: $(agent.policy.βTD1) βSR: $(agent.policy.βSR) βMB: $(agent.policy.βMB)] βBoat: $(agent.policy.βBoat)]"
+    model_name(agent.model; kwargs...) .* policy_str
+end
+function model_name(model::M; kwargs...) where {M <: TD0TD1SRMBWeightedStateModel}
+    "TD0TD1SRMBWeightedStateModel"
 end
 
 function TD0TD1SRMBWeightedAgent(env, TD0Model, TD1Model, SRModel, MBModel, βTD0, βTD1, βSR, βMB, βBoat)
-    model = TD0TD1SRMBWeightedModel(TD0Model, TD1Model, SRModel, MBModel)
+    model = TD0TD1SRMBWeightedStateModel(TD0Model, TD1Model, SRModel, MBModel)
     policy = PolicyTD0TD1SRMBTwoStepSoftmax(βTD0, βTD1, βSR, βMB, βBoat)
-    Agent(env, model, policy)
+    StateAgent(env, model, policy)
 end
 
-function update_model_start!(agent::Agent{E, M, P}) where {E, M <: TD0TD1SRMBWeightedModel, P}
-    update_model_start!(Agent(agent.env, agent.model.TD0Model, agent.policy))
-    update_model_start!(Agent(agent.env, agent.model.TD1Model, agent.policy))
-    update_model_start!(Agent(agent.env, agent.model.SRModel, agent.policy))
-    update_model_start!(Agent(agent.env, agent.model.MBModel, agent.policy))
+function update_model_start!(agent::StateAgent{E, M, P}) where {E, M <: TD0TD1SRMBWeightedStateModel, P}
+    update_model_start!(StateAgent(agent.env, agent.model.TD0Model, agent.policy))
+    update_model_start!(StateAgent(agent.env, agent.model.TD1Model, agent.policy))
+    update_model_start!(StateAgent(agent.env, agent.model.SRModel, agent.policy))
+    update_model_start!(StateAgent(agent.env, agent.model.MBModel, agent.policy))
     agent.model.QTD0[:] = agent.model.TD0Model.Q
     agent.model.QTD1[:] = agent.model.TD1Model.Q
     agent.model.QSR[:] = agent.model.SRModel.Q
@@ -43,11 +47,11 @@ function update_model_start!(agent::Agent{E, M, P}) where {E, M <: TD0TD1SRMBWei
     agent.model.V[:] = agent.model.TD0Model.V
 end
 
-function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: TD0TD1SRMBWeightedModel, P}
-    update_model_step!(Agent(agent.env, agent.model.TD0Model, agent.policy), s, reward, s′)
-    update_model_step!(Agent(agent.env, agent.model.TD1Model, agent.policy), s, reward, s′)
-    update_model_step!(Agent(agent.env, agent.model.SRModel, agent.policy), s, reward, s′)
-    update_model_step!(Agent(agent.env, agent.model.MBModel, agent.policy), s, reward, s′)
+function update_model_step!(agent::StateAgent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: TD0TD1SRMBWeightedStateModel, P}
+    update_model_step!(StateAgent(agent.env, agent.model.TD0Model, agent.policy), s, reward, s′)
+    update_model_step!(StateAgent(agent.env, agent.model.TD1Model, agent.policy), s, reward, s′)
+    update_model_step!(StateAgent(agent.env, agent.model.SRModel, agent.policy), s, reward, s′)
+    update_model_step!(StateAgent(agent.env, agent.model.MBModel, agent.policy), s, reward, s′)
     agent.model.QTD0[:] = agent.model.TD0Model.Q
     agent.model.QTD1[:] = agent.model.TD1Model.Q
     agent.model.QSR[:] = agent.model.SRModel.Q
@@ -55,11 +59,11 @@ function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::I
     agent.model.V[:] = agent.model.TD0Model.V
 end
 
-function update_model_step_blind!(agent::Agent{E, M, P}, s::Int, s′::Int) where {E, M <: TD0TD1SRMBWeightedModel, P}
-    update_model_step_blind!(Agent(agent.env, agent.model.TD0Model, agent.policy), s, s′)
-    update_model_step_blind!(Agent(agent.env, agent.model.TD1Model, agent.policy), s, s′)
-    update_model_step_blind!(Agent(agent.env, agent.model.SRModel, agent.policy), s, s′)
-    update_model_step_blind!(Agent(agent.env, agent.model.MBModel, agent.policy), s, s′)
+function update_model_step_blind!(agent::StateAgent{E, M, P}, s::Int, s′::Int) where {E, M <: TD0TD1SRMBWeightedStateModel, P}
+    update_model_step_blind!(StateAgent(agent.env, agent.model.TD0Model, agent.policy), s, s′)
+    update_model_step_blind!(StateAgent(agent.env, agent.model.TD1Model, agent.policy), s, s′)
+    update_model_step_blind!(StateAgent(agent.env, agent.model.SRModel, agent.policy), s, s′)
+    update_model_step_blind!(StateAgent(agent.env, agent.model.MBModel, agent.policy), s, s′)
     agent.model.QTD0[:] = agent.model.TD0Model.Q
     agent.model.QTD1[:] = agent.model.TD1Model.Q
     agent.model.QSR[:] = agent.model.SRModel.Q
@@ -67,11 +71,11 @@ function update_model_step_blind!(agent::Agent{E, M, P}, s::Int, s′::Int) wher
     agent.model.V[:] = agent.model.TD0Model.V
 end
 
-function update_model_end!(agent::Agent{E, M, P}, episode::Episode) where {E, M <: TD0TD1SRMBWeightedModel, P}
-    update_model_end!(Agent(agent.env, agent.model.TD0Model, agent.policy), episode)
-    update_model_end!(Agent(agent.env, agent.model.TD1Model, agent.policy), episode)
-    update_model_end!(Agent(agent.env, agent.model.SRModel, agent.policy), episode)
-    update_model_end!(Agent(agent.env, agent.model.MBModel, agent.policy), episode)
+function update_model_end!(agent::StateAgent{E, M, P}, episode::Episode) where {E, M <: TD0TD1SRMBWeightedStateModel, P}
+    update_model_end!(StateAgent(agent.env, agent.model.TD0Model, agent.policy), episode)
+    update_model_end!(StateAgent(agent.env, agent.model.TD1Model, agent.policy), episode)
+    update_model_end!(StateAgent(agent.env, agent.model.SRModel, agent.policy), episode)
+    update_model_end!(StateAgent(agent.env, agent.model.MBModel, agent.policy), episode)
     agent.model.QTD0[:] = agent.model.TD0Model.Q
     agent.model.QTD1[:] = agent.model.TD1Model.Q
     agent.model.QSR[:] = agent.model.SRModel.Q
@@ -80,7 +84,7 @@ function update_model_end!(agent::Agent{E, M, P}, episode::Episode) where {E, M 
 end
 
 # Snapshot code
-struct TD0TD1SRMBWeightedModelSnapshot <: AbstractModelSnapshop
+struct TD0TD1SRMBWeightedStateModelSnapshot <: AbstractModelSnapshot
     V::Vector{Float64}
     QTD0::Vector{Float64}
     QTD1::Vector{Float64}
@@ -89,8 +93,8 @@ struct TD0TD1SRMBWeightedModelSnapshot <: AbstractModelSnapshop
     M::Matrix{Float64}
     
 end
-function TD0TD1SRMBWeightedModelSnapshot(model::TD0TD1SRMBWeightedModel)
-    TD0TD1SRMBWeightedModelSnapshot(
+function TD0TD1SRMBWeightedStateModelSnapshot(model::TD0TD1SRMBWeightedStateModel)
+    TD0TD1SRMBWeightedStateModelSnapshot(
         copy(model.V),
         copy(model.QTD0),
         copy(model.QTD1),
@@ -98,7 +102,7 @@ function TD0TD1SRMBWeightedModelSnapshot(model::TD0TD1SRMBWeightedModel)
         copy(model.QMB),
         copy(model.SRModel.M))
 end
-mutable struct TD0TD1SRMBWeightedModelRecord{E <: AbstractEnv, P <: AbstractPolicy} <: AbstractRecord
+mutable struct TD0TD1SRMBWeightedStateModelRecord{E <: AbstractEnv, P <: AbstractPolicy} <: AbstractRecord
     env::E
     policy::P
     V::Matrix{Float64}
@@ -109,8 +113,8 @@ mutable struct TD0TD1SRMBWeightedModelRecord{E <: AbstractEnv, P <: AbstractPoli
     M::Array{Float64, 3}
     n::Int
 end
-function TD0TD1SRMBWeightedModelRecord(agent::Agent{E,M,P}, maxsize::Int)::TD0TD1SRMBWeightedModelRecord where {E <: AbstractEnv, M <: TD0TD1SRMBWeightedModel, P <: AbstractPolicy}
-    TD0TD1SRMBWeightedModelRecord(
+function TD0TD1SRMBWeightedStateModelRecord(agent::StateAgent{E,M,P}, maxsize::Int)::TD0TD1SRMBWeightedStateModelRecord where {E <: AbstractEnv, M <: TD0TD1SRMBWeightedStateModel, P <: AbstractPolicy}
+    TD0TD1SRMBWeightedStateModelRecord(
         agent.env,
         agent.policy,
         zeros(maxsize, length(agent.env)),
@@ -121,10 +125,10 @@ function TD0TD1SRMBWeightedModelRecord(agent::Agent{E,M,P}, maxsize::Int)::TD0TD
         zeros(maxsize, length(agent.env), length(agent.env)),
         0)
 end
-Base.firstindex(record::TD0TD1SRMBWeightedModelRecord) = 1
-Base.lastindex(record::TD0TD1SRMBWeightedModelRecord) = length(record)
-Base.length(record::TD0TD1SRMBWeightedModelRecord) = record.n
-function Base.push!(record::TD0TD1SRMBWeightedModelRecord, model::TD0TD1SRMBWeightedModel)
+Base.firstindex(record::TD0TD1SRMBWeightedStateModelRecord) = 1
+Base.lastindex(record::TD0TD1SRMBWeightedStateModelRecord) = length(record)
+Base.length(record::TD0TD1SRMBWeightedStateModelRecord) = record.n
+function Base.push!(record::TD0TD1SRMBWeightedStateModelRecord, model::TD0TD1SRMBWeightedStateModel)
     record.n += 1
     (sx, sy) = size(record.V)
     if record.n > sx
@@ -159,11 +163,11 @@ function Base.push!(record::TD0TD1SRMBWeightedModelRecord, model::TD0TD1SRMBWeig
     record.QMB[record.n, :] = model.QMB[:]
     record.M[record.n, :, :] = model.SRModel.M[:, :]
 end
-function Base.iterate(record::TD0TD1SRMBWeightedModelRecord, state=1)
+function Base.iterate(record::TD0TD1SRMBWeightedStateModelRecord, state=1)
     if state > length(record)
         nothing
     else
-        (TD0TD1SRMBWeightedModelSnapshot(
+        (TD0TD1SRMBWeightedStateModelSnapshot(
             record.V[state, :],
             record.QTD0[state, :],
             record.QTD1[state, :],
@@ -172,9 +176,9 @@ function Base.iterate(record::TD0TD1SRMBWeightedModelRecord, state=1)
             record.M[state, :, :]), state+1)
     end
 end
-function Base.getindex(record::TD0TD1SRMBWeightedModelRecord, i::Int)
+function Base.getindex(record::TD0TD1SRMBWeightedStateModelRecord, i::Int)
     1 <= i <= length(record) || throw(BoundsError(record, i))
-    TD0TD1SRMBWeightedModelSnapshot(
+    TD0TD1SRMBWeightedStateModelSnapshot(
         record.V[i, :], 
         record.QTD0[i, :],
         record.QTD1[i, :],
@@ -182,7 +186,7 @@ function Base.getindex(record::TD0TD1SRMBWeightedModelRecord, i::Int)
         record.QMB[i, :],
         record.M[i, :, :])
 end
-Base.getindex(record::TD0TD1SRMBWeightedModelRecord, I) = TD0TD1SRMBWeightedModelRecord(
+Base.getindex(record::TD0TD1SRMBWeightedStateModelRecord, I) = TD0TD1SRMBWeightedStateModelRecord(
     record.env,
     record.policy,
     record.V[I, :],
@@ -193,6 +197,6 @@ Base.getindex(record::TD0TD1SRMBWeightedModelRecord, I) = TD0TD1SRMBWeightedMode
     record.M[I, I, :],
     length(I))
 
-function Record(agent::Agent{E, M, P}, maxsize::Int)::TD0TD1SRMBWeightedModelRecord where {E, M <: TD0TD1SRMBWeightedModel, P}
-    TD0TD1SRMBWeightedModelRecord(agent, maxsize)
+function Record(agent::StateAgent{E, M, P}, maxsize::Int)::TD0TD1SRMBWeightedStateModelRecord where {E, M <: TD0TD1SRMBWeightedStateModel, P}
+    TD0TD1SRMBWeightedStateModelRecord(agent, maxsize)
 end

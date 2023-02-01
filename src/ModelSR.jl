@@ -1,4 +1,4 @@
-abstract type AbstractSR <: AbstractModel end
+abstract type AbstractSR <: AbstractStateModel end
 struct SRModel <: AbstractSR
     M::Matrix{Float64}
     R::Vector{Float64}
@@ -29,19 +29,19 @@ function model_name(model::M) where {M <: AbstractSR} "SR" end
 function SRSoftmax(env; α, αM, γ, λ, β)
     SR = SRModel(env, α, αM, γ, λ)
     policy = PolicySoftmax(β)
-    Agent(env, SR, policy)
+    StateAgent(env, SR, policy)
 end
 
 function SR_ϵ_Greedy(env; α, αM, γ, λ, ϵ)
     SR = SRModel(env, α, αM, γ, λ)
     policy = Policy_ϵ_Greedy(ϵ)
-    Agent(env, SR, policy)
+    StateAgent(env, SR, policy)
 end
 
 function SRGreedy(env; α, αM, γ, λ)
     SR = SRModel(env, α, αM, γ, λ)
     policy = PolicyGreedy()
-    Agent(env, SR, policy)
+    StateAgent(env, SR, policy)
 end
 
 """SR Non-Trace Update:
@@ -73,11 +73,11 @@ NB should verify what trace M updates should look like?
 
 
 """
-function update_model_start!(agent::Agent{E, M, P}) where {E, M <: AbstractSR, P}
+function update_model_start!(agent::StateAgent{E, M, P}) where {E, M <: AbstractSR, P}
     agent.model.trace .= 0
 end
 
-function update_model_step_blind!(agent::Agent{E, M, P}, s::Int, s′::Int) where {E, M <: AbstractSR, P}
+function update_model_step_blind!(agent::StateAgent{E, M, P}, s::Int, s′::Int) where {E, M <: AbstractSR, P}
     SR = agent.model
 
     # Update eligibility trace
@@ -103,7 +103,7 @@ function update_model_step_blind!(agent::Agent{E, M, P}, s::Int, s′::Int) wher
     SR.Q[:] = SR.γ * SR.V
 end
 
-function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: AbstractSR, P}
+function update_model_step!(agent::StateAgent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: AbstractSR, P}
     SR = agent.model
 
     # Update eligibility trace
@@ -133,10 +133,10 @@ function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::I
     SR.Q[:] = SR.γ * SR.V
 end
 
-function update_model_end!(::Agent{E, M, P}, ::Episode) where {E, M <: AbstractSR, P} end
+function update_model_end!(::StateAgent{E, M, P}, ::Episode) where {E, M <: AbstractSR, P} end
 
 # Snapshot code
-struct SRModelSnapshot <: AbstractModelSnapshop
+struct SRModelSnapshot <: AbstractModelSnapshot
     V::Vector{Float64}
     M::Matrix{Float64}
 end
@@ -150,7 +150,7 @@ mutable struct SRModelRecord{E <: AbstractEnv, P <: AbstractPolicy} <: AbstractR
     M::Array{Float64, 3}
     n::Int
 end
-function SRModelRecord(agent::Agent{E,M,P}, maxsize::Int)::SRModelRecord where {E <: AbstractEnv, M <: SRModel, P <: AbstractPolicy}
+function SRModelRecord(agent::StateAgent{E,M,P}, maxsize::Int)::SRModelRecord where {E <: AbstractEnv, M <: SRModel, P <: AbstractPolicy}
     SRModelRecord(
         agent.env,
         agent.policy,
@@ -189,6 +189,6 @@ function Base.getindex(record::SRModelRecord, i::Int)
 end
 Base.getindex(record::SRModelRecord, I) = SRModelRecord(record.env, record.policy, record.V[I, :], record.M[I, I, :], length(I))
 
-function Record(agent::Agent{E, M, P}, maxsize::Int)::SRModelRecord where {E, M <: SRModel, P}
+function Record(agent::StateAgent{E, M, P}, maxsize::Int)::SRModelRecord where {E, M <: SRModel, P}
     SRModelRecord(agent, maxsize)
 end

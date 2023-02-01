@@ -4,7 +4,7 @@ end
 function Policy_ϵ_Greedy(; ϵ)
     Policy_ϵ_Greedy(ϵ)
 end
-function sample_successor(env::AbstractEnv, model::AbstractModel, policy::Policy_ϵ_Greedy, s::Int)::Union{Int, Nothing}
+function sample_successor(env::AbstractEnv, model::AbstractStateModel, policy::Policy_ϵ_Greedy, s::Int)::Union{Int, Nothing}
     neighbors = find_neighbors(env, s)
     if isempty(neighbors)
         nothing
@@ -17,16 +17,40 @@ function sample_successor(env::AbstractEnv, model::AbstractModel, policy::Policy
         end
     end
 end
+function sample_successor(env::AbstractEnv, model::AbstractActionModel, policy::Policy_ϵ_Greedy, s::Int)::Union{Int, Nothing}
+    neighbors = find_neighbors(env, s)
+    if isempty(neighbors)
+        nothing
+    else
+        edges = [(s, n) for n in neighbors]
+        weights = [model.Q[edge_to_ind(env, e)] for e in edges]
+        if rand() < policy.ϵ || sum(weights) == 0
+            rand(neighbors)
+        else
+            rand(neighbors[weights .== maximum(weights)])
+        end
+    end
+end
 function policy_name(policy::Policy_ϵ_Greedy) "ϵ-Greedy" end
 
 struct PolicyGreedy <: AbstractPolicy
 end
-function sample_successor(env::AbstractEnv, model::AbstractModel, ::PolicyGreedy, s::Int)::Union{Int, Nothing}
+function sample_successor(env::AbstractEnv, model::AbstractStateModel, ::PolicyGreedy, s::Int)::Union{Int, Nothing}
     neighbors = find_neighbors(env, s)
     if isempty(neighbors)
         nothing
     else
         weights = model.Q[neighbors]
+        rand(neighbors[weights .== maximum(weights)])
+    end
+end
+function sample_successor(env::AbstractEnv, model::AbstractActionModel, ::PolicyGreedy, s::Int)::Union{Int, Nothing}
+    neighbors = find_neighbors(env, s)
+    if isempty(neighbors)
+        nothing
+    else
+        edges = [(s, n) for n in neighbors]
+        weights = [model.Q[edge_to_ind(env, e)] for e in edges]
         rand(neighbors[weights .== maximum(weights)])
     end
 end
@@ -38,12 +62,24 @@ end
 function PolicySoftmax(; β)
     PolicySoftmax(β)
 end
-function sample_successor(env::AbstractEnv, model::AbstractModel, policy::PolicySoftmax, s::Int)::Union{Int, Nothing}
+function sample_successor(env::AbstractEnv, model::AbstractStateModel, policy::PolicySoftmax, s::Int)::Union{Int, Nothing}
     neighbors = find_neighbors(env, s)
     if isempty(neighbors)
         nothing
     else
         neighbor_values = exp.(policy.β * model.Q[neighbors])
+        weights = Weights(neighbor_values ./ sum(neighbor_values))
+        sample(neighbors, weights)
+    end
+end
+function sample_successor(env::AbstractEnv, model::AbstractActionModel, policy::PolicySoftmax, s::Int)::Union{Int, Nothing}
+    neighbors = find_neighbors(env, s)
+    if isempty(neighbors)
+        nothing
+    else
+        edges = [(s, n) for n in neighbors]
+        raw_weights = [model.Q[edge_to_ind(env, e)] for e in edges]
+        neighbor_values = exp.(policy.β * raw_weights)
         weights = Weights(neighbor_values ./ sum(neighbor_values))
         sample(neighbors, weights)
     end
@@ -57,7 +93,7 @@ end
 function PolicyTwoStepSoftmax(; β1, β2)
     PolicyTwoStepSoftmax(β1, β2)
 end
-function sample_successor(env::AbstractEnv, model::AbstractModel, policy::PolicyTwoStepSoftmax, s::Int)::Union{Int, Nothing}
+function sample_successor(env::AbstractEnv, model::AbstractStateModel, policy::PolicyTwoStepSoftmax, s::Int)::Union{Int, Nothing}
     neighbors = find_neighbors(env, s)
     if isempty(neighbors)
         nothing
@@ -73,6 +109,24 @@ function sample_successor(env::AbstractEnv, model::AbstractModel, policy::Policy
         end
     end
 end
+function sample_successor(env::AbstractEnv, model::AbstractActionModel, policy::PolicyTwoStepSoftmax, s::Int)::Union{Int, Nothing}
+    neighbors = find_neighbors(env, s)
+    if isempty(neighbors)
+        nothing
+    else
+        edges = [(s, n) for n in neighbors]
+        raw_weights = [model.Q[edge_to_ind(env, e)] for e in edges]
+        if (s == 1)
+            neighbor_values = exp.(policy.β1 * raw_weights)
+            weights = Weights(neighbor_values ./ sum(neighbor_values))
+            sample(neighbors, weights)
+        else
+            neighbor_values = exp.(policy.β2 * raw_weights)
+            weights = Weights(neighbor_values ./ sum(neighbor_values))
+            sample(neighbors, weights)
+        end
+    end
+end
 function policy_name(policy::PolicyTwoStepSoftmax) "Softmax" end
 
 
@@ -83,7 +137,7 @@ struct PolicyTD0TD1SRMBTwoStepSoftmax <: AbstractPolicy
     βMB::Float64
     βBoat::Float64
 end
-function sample_successor(env::AbstractEnv, model::AbstractModel, policy::PolicyTD0TD1SRMBTwoStepSoftmax, s::Int)::Union{Int, Nothing}
+function sample_successor(env::AbstractEnv, model::AbstractStateModel, policy::PolicyTD0TD1SRMBTwoStepSoftmax, s::Int)::Union{Int, Nothing}
     neighbors = find_neighbors(env, s)
     if isempty(neighbors)
         nothing
@@ -94,6 +148,24 @@ function sample_successor(env::AbstractEnv, model::AbstractModel, policy::Policy
             sample(neighbors, weights)
         else
             neighbor_values = exp.(policy.βBoat * model.QTD0[neighbors])
+            weights = Weights(neighbor_values ./ sum(neighbor_values))
+            sample(neighbors, weights)
+        end
+    end
+end
+function sample_successor(env::AbstractEnv, model::AbstractActionModel, policy::PolicyTD0TD1SRMBTwoStepSoftmax, s::Int)::Union{Int, Nothing}
+    neighbors = find_neighbors(env, s)
+    if isempty(neighbors)
+        nothing
+    else
+        edges = [(s, n) for n in neighbors]
+        inds = [edge_to_ind(env, e) for e in edges]
+        if (s == 1)
+            neighbor_values = exp.(policy.βTD0 * model.QTD0[inds] + policy.βTD1 * model.QTD1[inds] + policy.βSR * model.QSR[inds] + policy.βMB * model.QMB[inds])
+            weights = Weights(neighbor_values ./ sum(neighbor_values))
+            sample(neighbors, weights)
+        else
+            neighbor_values = exp.(policy.βBoat * model.QTD0[inds])
             weights = Weights(neighbor_values ./ sum(neighbor_values))
             sample(neighbors, weights)
         end

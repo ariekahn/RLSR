@@ -1,4 +1,4 @@
-abstract type AbstractSRTD <: AbstractModel end
+abstract type AbstractSRTD <: AbstractStateModel end
 struct SRTDModel <: AbstractSRTD
     M::Matrix{Float64}
     w::Vector{Float64}
@@ -29,19 +29,19 @@ function model_name(model::M) where {M <: AbstractSRTD} "SR-TD" end
 function SRTDSoftmax(env; α, αM, γ, λ, β)
     SRTD = SRTDModel(env, α, αM, γ, λ)
     policy = PolicySoftmax(β)
-    Agent(env, SRTD, policy)
+    StateAgent(env, SRTD, policy)
 end
 
 function SRTD_ϵ_Greedy(env; α, αM, γ, λ, ϵ)
     SRTD = SRTDModel(env, α, αM, γ, λ)
     policy = Policy_ϵ_Greedy(ϵ)
-    Agent(env, SRTD, policy)
+    StateAgent(env, SRTD, policy)
 end
 
 function SRTDGreedy(env; α, αM, γ, λ)
     SRTD = SRTDModel(env, α, αM, γ, λ)
     policy = PolicyGreedy()
-    Agent(env, SRTD, policy)
+    StateAgent(env, SRTD, policy)
 end
 
 """SR Non-Trace Update:
@@ -73,11 +73,11 @@ NB should verify what trace M updates should look like?
 
 
 """
-function update_model_start!(agent::Agent{E, M, P}) where {E, M <: AbstractSRTD, P}
+function update_model_start!(agent::StateAgent{E, M, P}) where {E, M <: AbstractSRTD, P}
     agent.model.trace .= 0
 end
 
-function update_model_step_blind!(agent::Agent{E, M, P}, s::Int, s′::Int) where {E, M <: AbstractSRTD, P}
+function update_model_step_blind!(agent::StateAgent{E, M, P}, s::Int, s′::Int) where {E, M <: AbstractSRTD, P}
     SRTD = agent.model
 
     # Update eligibility trace
@@ -109,7 +109,7 @@ function update_model_step_blind!(agent::Agent{E, M, P}, s::Int, s′::Int) wher
     SRTD.Q[:] = SRTD.γ * SRTD.V
 end
 
-function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: AbstractSRTD, P}
+function update_model_step!(agent::StateAgent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: AbstractSRTD, P}
     SRTD = agent.model
 
     # Update eligibility trace
@@ -154,4 +154,4 @@ function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::I
     SRTD.Q[:] = SRTD.γ * SRTD.V
 end
 
-function update_model_end!(::Agent{E, M, P}, ::Episode) where {E, M <: AbstractSRTD, P} end
+function update_model_end!(::StateAgent{E, M, P}, ::Episode) where {E, M <: AbstractSRTD, P} end

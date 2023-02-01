@@ -7,7 +7,7 @@ That is, s → a → s′ induces a reward based on s′, which is estimated by 
 The Q-value of an action should then be R[s′] + γ * V[s′]
 
 """
-abstract type AbstractMB <: AbstractModel end
+abstract type AbstractMB <: AbstractStateModel end
 struct MBModel <: AbstractMB
     V::Vector{Float64}
     Q::Vector{Float64}
@@ -25,38 +25,38 @@ function model_name(model::M) where {M <: AbstractMB} "MB" end
 function MBSoftmax(env; α, γ, β)
     MB = MBModel(env, α, γ)
     policy = PolicySoftmax(β)
-    Agent(env, MB, policy)
+    StateAgent(env, MB, policy)
 end
 
 function MBGreedy(env; α, γ)
     MB = MBModel(env, α, γ)
     policy = PolicyGreedy()
-    Agent(env, MB, policy)
+    StateAgent(env, MB, policy)
 end
 
 function MB_ϵ_Greedy(env; α, γ, ϵ)
     MB = MBModel(env, α, γ)
     policy = Policy_ϵ_Greedy(ϵ)
-    Agent(env, MB, policy)
+    StateAgent(env, MB, policy)
 end
 
-function update_model_start!(agent::Agent{E, M, P}) where {E, M <: AbstractMB, P} end
+function update_model_start!(agent::StateAgent{E, M, P}) where {E, M <: AbstractMB, P} end
 
-function update_model_step_blind!(agent::Agent{E, M, P}, s::Int, s′::Int) where {E, M <: AbstractMB, P} end
+function update_model_step_blind!(agent::StateAgent{E, M, P}, s::Int, s′::Int) where {E, M <: AbstractMB, P} end
 
-function update_model_step!(agent::Agent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: AbstractMB, P}
+function update_model_step!(agent::StateAgent{E, M, P}, s::Int, reward::Real, s′::Int) where {E, M <: AbstractMB, P}
     agent.model.R[s′] = (agent.model.α * reward) + ((1 - agent.model.α) * agent.model.R[s′])
     agent.model.Q[s′] = agent.model.V[s′] * agent.model.γ + agent.model.R[s′]
 end
 
-function update_model_end!(agent::Agent{E, M, P}, ::Episode) where {E, M <: AbstractMB, P}
+function update_model_end!(agent::StateAgent{E, M, P}, ::Episode) where {E, M <: AbstractMB, P}
     value_iteration!(agent)
 end
 
 """
 Off-policy evaluation (greedy)
 """
-function value_iteration!(agent::Agent{E, M, P}) where {E, M <: AbstractMB, P}
+function value_iteration!(agent::StateAgent{E, M, P}) where {E, M <: AbstractMB, P}
     nonterminal = findall(.!agent.env.terminal_states)
     while true
         diff = 0.0
@@ -66,6 +66,7 @@ function value_iteration!(agent::Agent{E, M, P}) where {E, M <: AbstractMB, P}
             V_est_new = maximum(Q_ests) 
             diff = max(diff, abs(V_est_new - agent.model.V[state]))
             agent.model.V[state] = V_est_new
+            # The Q-value of an action that arrives in this state
             agent.model.Q[state] = V_est_new * agent.model.γ + agent.model.R[state]
         end
         if diff < 1e-6
@@ -77,7 +78,7 @@ end
 """
 The below is for on-policy evaluation
 """
-# function value_iteration!(agent::Agent{E, M, P}) where {E, M <: AbstractMB, P <: Policy_ϵ_Greedy}
+# function value_iteration!(agent::StateAgent{E, M, P}) where {E, M <: AbstractMB, P <: Policy_ϵ_Greedy}
 #     nonterminal = findall(.!agent.env.terminal_states)
 #     while true
 #         diff = 0.0
@@ -95,7 +96,7 @@ The below is for on-policy evaluation
 #     end
 # end
 
-# function value_iteration!(agent::Agent{E, M, P}) where {E, M <: AbstractMB, P <: PolicyGreedy}
+# function value_iteration!(agent::StateAgent{E, M, P}) where {E, M <: AbstractMB, P <: PolicyGreedy}
 #     nonterminal = findall(.!agent.env.terminal_states)
 #     while true
 #         diff = 0.0
@@ -113,7 +114,7 @@ The below is for on-policy evaluation
 #     end
 # end
 
-# function value_iteration!(agent::Agent{E, M, P}) where {E, M <: AbstractMB, P <: PolicySoftmax}
+# function value_iteration!(agent::StateAgent{E, M, P}) where {E, M <: AbstractMB, P <: PolicySoftmax}
 #     nonterminal = findall(.!agent.env.terminal_states)
 #     while true
 #         diff = 0.0

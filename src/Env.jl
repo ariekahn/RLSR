@@ -4,9 +4,11 @@ end
 
 struct GraphEnv <: AbstractGraphEnv
     graph::SimpleDiGraph
+    line_graph::SimpleDiGraph
     adjacency_matrix::Matrix{Float64}
     terminal_states::Vector{Bool}
     neighbors::Dict{Int, Vector{Int}}
+    edge_inds::Dict{Tuple{Int, Int}, Int}
     x_coords::Vector{Float64}
     y_coords::Vector{Float64}
     R::Vector{Float64}
@@ -14,9 +16,11 @@ end
 
 struct GraphEnvStochastic <: AbstractGraphEnv
     graph::SimpleDiGraph
+    line_graph::SimpleDiGraph
     adjacency_matrix::Matrix{Float64}
     terminal_states::Vector{Bool}
     neighbors::Dict{Int, Vector{Int}}
+    edge_inds::Dict{Tuple{Int, Int}, Int}
     x_coords::Vector{Float64}
     y_coords::Vector{Float64}
     R_μ::Vector{Float64}
@@ -25,13 +29,37 @@ end
 
 struct GraphEnvStochasticBinary <: AbstractGraphEnv
     graph::SimpleDiGraph
+    line_graph::SimpleDiGraph
     adjacency_matrix::Matrix{Float64}
     terminal_states::Vector{Bool}
     neighbors::Dict{Int, Vector{Int}}
+    edge_inds::Dict{Tuple{Int, Int}, Int}
     x_coords::Vector{Float64}
     y_coords::Vector{Float64}
     isrewarded::Vector{Bool}
     R::Vector{Float64}
+end
+
+"""
+Return a graph whose nodes correspond to edges in G
+"""
+function LineGraph(G, edge_inds)
+    T_edge = zeros(ne(G), ne(G))
+    for node in vertices(G)
+        in_n = inneighbors(G, node)
+        out_n = outneighbors(G, node)
+        w = 1.0 / length(out_n)
+        for src in in_n
+            for dest in out_n
+                T_edge[edge_inds[(src, node)], edge_inds[(node, dest)]] = w
+            end
+        end
+    end
+    SimpleDiGraph(T_edge)
+end
+
+function edge_to_ind(env, edge)
+    env.edge_inds[edge]
 end
 
 function GraphEnv(A::Matrix, x_coords::Vector{Float64}, y_coords::Vector{Float64}, R::Vector{Float64})
@@ -40,7 +68,10 @@ function GraphEnv(A::Matrix, x_coords::Vector{Float64}, y_coords::Vector{Float64
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
     end
-    GraphEnv(SimpleDiGraph(A), A, terminal, neighbors, x_coords, y_coords, R)
+    G = SimpleDiGraph(A)
+    edge_inds = Dict((edge.src, edge.dst) => i for (i, edge) in enumerate(edges(G)))
+    LG = LineGraph(G, edge_inds)
+    GraphEnv(G, LG, A, terminal, neighbors, edge_inds, x_coords, y_coords, R)
 end
 
 function GraphEnvStochastic(A::Matrix,
@@ -51,7 +82,10 @@ function GraphEnvStochastic(A::Matrix,
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
     end
-    GraphEnvStochastic(SimpleDiGraph(A), A, terminal, neighbors, x_coords, y_coords, R_μ, R_σ)
+    G = SimpleDiGraph(A)
+    edge_inds = Dict((edge.src, edge.dst) => i for (i, edge) in enumerate(edges(G)))
+    LG = LineGraph(G, edge_inds)
+    GraphEnvStochastic(G, LG, A, terminal, neighbors, edge_inds, x_coords, y_coords, R_μ, R_σ)
 end
 
 function GraphEnvStochasticBinary(A::Matrix,
@@ -62,7 +96,10 @@ function GraphEnvStochasticBinary(A::Matrix,
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
     end
-    GraphEnvStochasticBinary(SimpleDiGraph(A), A, terminal, neighbors, x_coords, y_coords, isrewarded, R)
+    G = SimpleDiGraph(A)
+    edge_inds = Dict((edge.src, edge.dst) => i for (i, edge) in enumerate(edges(G)))
+    LG = LineGraph(G, edge_inds)
+    GraphEnvStochasticBinary(G, LG, A, terminal, neighbors, edge_inds, x_coords, y_coords, isrewarded, R)
 end
 
 """
