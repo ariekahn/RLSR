@@ -107,7 +107,7 @@ Takes a graph environment and its stochastic transition matrix,
 such that all valid transitions from a state sum to 1
 """
 function stochastic_matrix(env::E)::Matrix{Float64} where E <: AbstractGraphEnv
-    T = env.adjacency_matrix
+    T = copy(env.adjacency_matrix)
     for r in axes(T, 1)
         s = sum(T[r, :])
         if s > 0
