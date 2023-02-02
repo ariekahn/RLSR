@@ -39,6 +39,7 @@ include("ModelSR.jl")
 include("ModelMB.jl")
 include("ModelMFTD.jl")
 include("ModelSARSA.jl")
+include("ModelLRL.jl")
 include("ModelWeighted.jl")
 include("TD0TD1SRMBWeightedModel.jl")
 include("Snapshots.jl")
@@ -58,6 +59,7 @@ export SRModel, SR_ϵ_Greedy, SRGreedy, SRSoftmax
 export MBModel, MB_ϵ_Greedy, MBGreedy, MBSoftmax
 export MFTDModel, MFTD_ϵ_Greedy, MFTDGreedy, MFTDSoftmax
 export SARSAModel, SARSA_ϵ_Greedy, SARSAGreedy, SARSASoftmax
+export LRLModel, LRL_ϵ_Greedy, LRLGreedy, LRLSoftmax, LRLOnPolicy, recompute_policy!, recompute_V!, recompute_z!
 export TD0TD1SRMBWeightedModel, TD0TD1SRMBWeightedAgent
 export WeightedModel, WeightedModel_ϵ_Greedy, WeightedModelTwoStepSoftmax, WeightedModelGreedy, WeightedModelSoftmax
 export StateModelSnapshot, StateModelRecord, ActionModelSnapshot, ActionModelRecord

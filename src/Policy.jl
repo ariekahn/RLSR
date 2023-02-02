@@ -172,3 +172,17 @@ function sample_successor(env::AbstractEnv, model::AbstractActionModel, policy::
     end
 end
 function policy_name(policy::PolicyTD0TD1SRMBTwoStepSoftmax) "TD0TD1SRMBwoStepSoftmax" end
+
+# For Linear RL
+struct PolicyLRLOnPolicy <: AbstractPolicy
+end
+function sample_successor(env::AbstractEnv, model::AbstractStateModel, policy::PolicyLRLOnPolicy, s::Int)::Union{Int, Nothing}
+    neighbors = find_neighbors(env, s)
+    if isempty(neighbors)
+        nothing
+    else
+        neighbor_values = model.T_policy[s, neighbors]
+        weights = Weights(neighbor_values ./ sum(neighbor_values))
+        sample(neighbors, weights)
+    end
+end
