@@ -243,7 +243,7 @@ end
 export make_alternate_starts, make_bottom_starts, run_trials!, run_trials, passive_trials!
 
 function run_trials_drift(agent, startstates::Vector{Int}, σ; lb, ub)
-    agentRecord = ModelRecord(agent, length(startstates))
+    agentRecord = Record(agent, length(startstates))
     episodeRecord = Vector{Episode}()   
     envRecord = zeros(length(startstates), 4)
     for (i, s) in enumerate(startstates)
