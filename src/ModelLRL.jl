@@ -91,6 +91,12 @@ function LRLOnPolicy(env; α, αT, Tmax, λ, c)
     StateAgent(env, LRL, policy)
 end
 
+function LRLOnPolicy_ϵ_Greedy(env; α, αT, Tmax, λ, c, ϵ)
+    LRL = LRLModel(env, α, αT, Tmax, λ, c)
+    policy = PolicyLRLOnPolicy_ϵ_Greedy(ϵ)
+    StateAgent(env, LRL, policy)
+end
+
 function update_model_start!(agent::StateAgent{E, M, P}) where {E, M <: AbstractLRL, P} end
 
 function update_model_step_blind!(agent::StateAgent{E, M, P}, s::Int, s′::Int) where {E, M <: AbstractLRL, P} end

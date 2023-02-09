@@ -186,3 +186,23 @@ function sample_successor(env::AbstractEnv, model::AbstractStateModel, policy::P
         sample(neighbors, weights)
     end
 end
+
+struct PolicyLRLOnPolicy_ϵ_Greedy <: AbstractPolicy
+    ϵ::Float64
+end
+function PolicyLRLOnPolicy_ϵ_Greedy(; ϵ)
+    PolicyLRLOnPolicy_ϵ_Greedy(ϵ)
+end
+function sample_successor(env::AbstractEnv, model::AbstractStateModel, policy::PolicyLRLOnPolicy_ϵ_Greedy, s::Int)::Union{Int, Nothing}
+    neighbors = find_neighbors(env, s)
+    if isempty(neighbors)
+        nothing
+    elseif rand() < policy.ϵ
+        rand(neighbors)
+    else
+        neighbor_values = model.T_policy[s, neighbors]
+        weights = Weights(neighbor_values ./ sum(neighbor_values))
+        sample(neighbors, weights)
+    end
+    end
+end
