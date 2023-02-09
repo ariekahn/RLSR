@@ -204,5 +204,4 @@ function sample_successor(env::AbstractEnv, model::AbstractStateModel, policy::P
         weights = Weights(neighbor_values ./ sum(neighbor_values))
         sample(neighbors, weights)
     end
-    end
 end
