@@ -10,13 +10,11 @@ V: v
 Q: v + step cost
 R: Reward, as well as step cost (negative) at each point
 T: Transition Matrix for π_d
-T_noise: Transition matrix initialized to π_d, used with Tmax
 T_policy: Transition matrix for π
 D: This is the equivalent of M, for all (terminal & non-terminal) states
 z_hat: This is DP
 α: Learning rate for reward
 αT: Learning rate for transitions
-Tmax: Proportion of transition matrix influenced by αT
 λ: Control Cost Scaling
 """
 abstract type AbstractLRL <: AbstractStateModel end
@@ -26,16 +24,14 @@ struct LRLModel <: AbstractLRL
     Q::Vector{Float64}
     R::Vector{Float64}
     T::Matrix{Float64}
-    T_noise::Matrix{Float64}
     T_policy::Matrix{Float64}
     D::Matrix{Float64}
     z_hat::Matrix{Float64}
     α::Float64
     αT::Float64
-    Tmax::Float64
     λ::Float64
 end
-function LRLModel(env, α, αT, Tmax, λ, c)
+function LRLModel(env, α, αT, λ, c)
     n = length(env)
     terminals = findall(env.terminal_states)
     nonterminals = findall(.!env.terminal_states)
@@ -45,7 +41,6 @@ function LRLModel(env, α, αT, Tmax, λ, c)
     R[nonterminals] .= -c
 
     T = stochastic_matrix(env)
-    T_noise = copy(T)
     T_policy = zeros(n, n)
 
     D = zeros(n, n)
@@ -55,7 +50,7 @@ function LRLModel(env, α, αT, Tmax, λ, c)
     V = zeros(n)
     Q = zeros(n)
 
-    LRL = LRLModel(e_V, V, Q, R, T, T_noise, T_policy, D, z_hat, α, αT, Tmax, λ)
+    LRL = LRLModel(e_V, V, Q, R, T, T_policy, D, z_hat, α, αT, λ)
 
     recompute_z!(env, LRL)
     recompute_V!(env, LRL)
@@ -63,36 +58,36 @@ function LRLModel(env, α, αT, Tmax, λ, c)
 
     return LRL
 end
-LRLModel(env; α, αT, λ, c)::LRLModel = LRLModel(env, α, αT, Tmax, λ, c)
+LRLModel(env; α, αT, λ, c)::LRLModel = LRLModel(env, α, αT, λ, c)
 function model_name(model::M) where {M <: AbstractLRL} "LRL" end
 
 
-function LRLSoftmax(env; α, αT, Tmax, λ, c, β)
-    LRL = LRLModel(env, α, αT, Tmax, λ, c)
+function LRLSoftmax(env; α, αT, λ, c, β)
+    LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicySoftmax(β)
     StateAgent(env, LRL, policy)
 end
 
-function LRLGreedy(env; α, αT, Tmax, λ, c)
-    LRL = LRLModel(env, α, αT, Tmax, λ, c)
+function LRLGreedy(env; α, αT, λ, c)
+    LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicyGreedy()
     StateAgent(env, LRL, policy)
 end
 
-function LRL_ϵ_Greedy(env; α, αT, Tmax, λ, c, ϵ)
-    LRL = LRLModel(env, α, αT, Tmax, λ, c)
+function LRL_ϵ_Greedy(env; α, αT, λ, c, ϵ)
+    LRL = LRLModel(env, α, αT, λ, c)
     policy = Policy_ϵ_Greedy(ϵ)
     StateAgent(env, LRL, policy)
 end
 
-function LRLOnPolicy(env; α, αT, Tmax, λ, c)
-    LRL = LRLModel(env, α, αT, Tmax, λ, c)
+function LRLOnPolicy(env; α, αT, λ, c)
+    LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicyLRLOnPolicy()
     StateAgent(env, LRL, policy)
 end
 
-function LRLOnPolicy_ϵ_Greedy(env; α, αT, Tmax, λ, c, ϵ)
-    LRL = LRLModel(env, α, αT, Tmax, λ, c)
+function LRLOnPolicy_ϵ_Greedy(env; α, αT, λ, c, ϵ)
+    LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicyLRLOnPolicy_ϵ_Greedy(ϵ)
     StateAgent(env, LRL, policy)
 end
@@ -116,9 +111,8 @@ function update_model_end!(agent::StateAgent{E, M, P}, ep::Episode) where {E, M 
     s_prev = 0
     for (s, r) in ep
         if (s_prev > 0)
-            agent.model.T[s_prev,:] .= agent.model.Tmax .* (1 - agent.model.αT) .* agent.model.T[s_prev,:]
-            agent.model.T[s_prev,s] += agent.model.Tmax .* agent.model.αT
-            agent.model.T[s_prev,:] .+= (1 - agent.model.Tmax) .* agent.model.T_noise[s_prev,:]
+            agent.model.T[s_prev,s] += agent.model.αT * (1 - agent.model.T[s_prev,s])
+            agent.model.T[s_prev,:] ./= sum(agent.model.T[s_prev,:])
         end
         s_prev = s
     end
