@@ -98,8 +98,13 @@ function make_env(rewards::Vector{Float64}=[0.5, 0.5, 0.5, 0.5])
          0, 0,
          0, 0, 0, 0,
          rewards[1], rewards[2], rewards[3], rewards[4]]
+
+    terminal = [false,
+                false, false,
+                false, false, false, false,
+                true, true, true, true]
     
-    GraphEnvStochasticBinary(A, locs_x, locs_y, isrewarded, rewards)
+    GraphEnvStochasticBinary(A, locs_x, locs_y, isrewarded, rewards; terminal)
 end
 export make_env
 
@@ -141,8 +146,14 @@ function make_env_big(rewards::Vector{Float64}=[0.5, 0.5, 0.5, 0.5])
                0, 0,
                0, 0, 0, 0,
          rewards[1], rewards[2], rewards[3], rewards[4]]
+
+    terminal = [false,
+                false, false,
+                false, false,
+                false, false, false, false,
+                true, true, true, true]
     
-    GraphEnvStochasticBinary(A, locs_x, locs_y, isrewarded, rewards)
+    GraphEnvStochasticBinary(A, locs_x, locs_y, isrewarded, rewards; terminal)
 end
 export make_env_big
 
@@ -179,8 +190,14 @@ function make_env_normal(μ::Vector{Float64}=[0.0, 0.0, 0.0, 0.0], σ::Vector{Fl
            0, 0,
            0, 0, 0, 0,
            σ[1], σ[2], σ[3], σ[4]]
+
+    terminal = [false,
+                false, false,
+                false, false,
+                false, false, false, false,
+                true, true, true, true]
     
-    GraphEnvStochastic(A, locs_x, locs_y, R_μ, R_σ)
+    GraphEnvStochastic(A, locs_x, locs_y, R_μ, R_σ; terminal)
 end
 export make_env_normal
 

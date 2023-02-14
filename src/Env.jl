@@ -62,8 +62,11 @@ function edge_to_ind(env, edge)
     env.edge_inds[edge]
 end
 
-function GraphEnv(A::Matrix, x_coords::Vector{Float64}, y_coords::Vector{Float64}, R::Vector{Float64})
-    terminal = sum(A; dims=2)#[:, 1]# .== 0
+function GraphEnv(A::Matrix, x_coords::Vector{Float64}, y_coords::Vector{Float64}, R::Vector{Float64};
+                  terminal)
+    if isnothing(terminal)
+        terminal = sum(A; dims=2)
+    end
     neighbors = Dict{Int, Vector{Int}}()
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
@@ -76,8 +79,11 @@ end
 
 function GraphEnvStochastic(A::Matrix,
                             x_coords::Vector{Float64}, y_coords::Vector{Float64},
-                            R_μ::Vector{Float64}, R_σ::Vector{Float64})
-    terminal = sum(A, dims=2)[:, 1] .== 0
+                            R_μ::Vector{Float64}, R_σ::Vector{Float64};
+                            terminal)
+    if isnothing(terminal)
+        terminal = sum(A, dims=2)[:, 1] .== 0
+    end
     neighbors = Dict{Int, Vector{Int}}()
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
@@ -90,8 +96,11 @@ end
 
 function GraphEnvStochasticBinary(A::Matrix,
                                   x_coords::Vector{Float64}, y_coords::Vector{Float64},
-                                  isrewarded::Union{Vector{Bool}, Vector{Int}}, R::Vector{Float64})
-    terminal = sum(A, dims=2)[:, 1] .== 0
+                                  isrewarded::Union{Vector{Bool}, Vector{Int}}, R::Vector{Float64};
+                                  terminal)
+    if isnothing(terminal)
+        terminal = sum(A, dims=2)[:, 1] .== 0
+    end
     neighbors = Dict{Int, Vector{Int}}()
     for state in 1:size(A)[1]
         neighbors[state] = findall(A[state, :] .> 0)
