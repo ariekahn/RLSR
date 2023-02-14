@@ -158,11 +158,11 @@ function recompute_V!(env, LRL::AbstractLRL)
 
     e_R = exp.(LRL.R[terminals]./LRL.λ)
 
-    LRL.e_V[nonterminals] = LRL.z_hat[nonterminals, :] * e_R
-    LRL.e_V[terminals] = e_R
+    LRL.e_V[nonterminals] .= LRL.z_hat[nonterminals, :] * e_R
+    LRL.e_V[terminals] .= e_R
 
     LRL.V .= log.(LRL.e_V) .* LRL.λ
-    LRL.Q .= LRL.V .+ LRL.R
+    LRL.Q .= LRL.V # v(s) already includes r(s), this is what we should use for deciding between actions
 end
 
 "Recompute policy (π) for a Linear RL agent"
