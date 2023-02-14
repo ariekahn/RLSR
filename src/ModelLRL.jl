@@ -108,8 +108,8 @@ function update_model_end!(agent::StateAgent{E, M, P}, ep::Episode) where {E, M 
     # Update terminal reward
     for (s, r) in ep
         if agent.env.terminal_states[s]
-        agent.model.R[s] = (agent.model.α * r) + ((1 - agent.model.α) * agent.model.R[s])
-    end
+            agent.model.R[s] = (agent.model.α * r) + ((1 - agent.model.α) * agent.model.R[s])
+        end
     end
 
     # Update transitions
