@@ -111,8 +111,8 @@ function update_model_end!(agent::StateAgent{E, M, P}, ep::Episode) where {E, M 
     s_prev = 0
     for (s, r) in ep
         if (s_prev > 0)
-            agent.model.T[s_prev,s] += agent.model.αT * (1 - agent.model.T[s_prev,s])
-            agent.model.T[s_prev,:] ./= sum(agent.model.T[s_prev,:])
+            agent.model.T[s_prev,:] .*= (1 - agent.model.αT)
+            agent.model.T[s_prev,s] += agent.model.αT
         end
         s_prev = s
     end
