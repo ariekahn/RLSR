@@ -67,6 +67,11 @@ function LRLSoftmax(env; α, αT, λ, c, β)
     policy = PolicySoftmax(β)
     StateAgent(env, LRL, policy)
 end
+function LRLTwoStepSoftmax(env; α, αT, λ, c, β1, β2)
+    LRL = LRLModel(env, α, αT, λ, c)
+    policy = PolicyTwoStepSoftmax(β1, β2)
+    StateAgent(env, LRL, policy)
+end
 
 function LRLGreedy(env; α, αT, λ, c)
     LRL = LRLModel(env, α, αT, λ, c)
