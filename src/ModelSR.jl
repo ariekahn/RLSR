@@ -32,6 +32,12 @@ function SRSoftmax(env; α, αM, γ, λ, β)
     StateAgent(env, SR, policy)
 end
 
+function SRTwoStepSoftmax(env; α, αM, γ, λ, β1, β2)
+    SR = SRModel(env, α, αM, γ, λ)
+    policy = PolicyTwoStepSoftmax(β1, β2)
+    StateAgent(env, SR, policy)
+end
+
 function SR_ϵ_Greedy(env; α, αM, γ, λ, ϵ)
     SR = SRModel(env, α, αM, γ, λ)
     policy = Policy_ϵ_Greedy(ϵ)

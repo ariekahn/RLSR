@@ -28,6 +28,12 @@ function MBSoftmax(env; α, γ, β)
     StateAgent(env, MB, policy)
 end
 
+function MBTwoStepSoftmax(env; α, γ, β1, β2)
+    MB = MBModel(env, α, γ)
+    policy = PolicyTwoStepSoftmax(β1, β2)
+    StateAgent(env, MB, policy)
+end
+
 function MBGreedy(env; α, γ)
     MB = MBModel(env, α, γ)
     policy = PolicyGreedy()
