@@ -1,7 +1,7 @@
 module RLSR
 
 using LinearAlgebra
-using LightGraphs
+using Graphs
 using Random
 using StatsBase
 using Distributions
