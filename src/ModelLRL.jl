@@ -174,7 +174,8 @@ end
 
 "KL Distance between default and current policy at each state"
 function kl_distance(model::AbstractLRL)
-    model.T_policy * model.V / model.λ - log.(model.T * model.e_V)
+    kl = model.T_policy * model.V / model.λ - log.(model.T * model.e_V)
+    max.(kl, 0) # KL is non-negative (eliminate rounding errors)
 end
 function kl_distance(agent::StateAgent{E, M, Q}) where {E, M <: AbstractLRL, Q}
     kl_distance(agent.model)
