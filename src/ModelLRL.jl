@@ -193,17 +193,19 @@ end
 ##################
 struct LRLModelSnapshot <: AbstractModelSnapshot
     V::Vector{Float64}
+    R::Vector{Float64}
     control_cost::Vector{Float64}
     T::Matrix{Float64}
     T_policy::Matrix{Float64}
 end
 function LRLModelSnapshot(model::LRLModel)
-    LRLModelSnapshot(copy(model.V), control_cost(model), copy(model.T), copy(model.T_policy))
+    LRLModelSnapshot(copy(model.V), copy(model.R), control_cost(model), copy(model.T), copy(model.T_policy))
 end
 mutable struct LRLModelRecord{E <: AbstractEnv, P <: AbstractPolicy} <: AbstractRecord
     env::E
     policy::P
     V::Matrix{Float64}
+    R::Matrix{Float64}
     control_cost::Matrix{Float64}
     T::Array{Float64, 3}
     T_policy::Array{Float64, 3}
@@ -213,6 +215,7 @@ function LRLModelRecord(agent::StateAgent{E,M,P}, maxsize::Int)::LRLModelRecord 
     LRLModelRecord(
         agent.env,
         agent.policy,
+        zeros(maxsize, length(agent.env)),
         zeros(maxsize, length(agent.env)),
         zeros(maxsize, length(agent.env)),
         zeros(maxsize, length(agent.env), length(agent.env)),
@@ -230,6 +233,10 @@ function Base.push!(record::LRLModelRecord, model::LRLModel)
         view(new_V, 1:sx, :) .= record.V
         record.V = new_V
 
+        new_R = zeros(sx * 2, sy)
+        view(new_R, 1:sx, :) .= record.R
+        record.R = new_R
+
         new_control_cost = zeros(sx * 2, sy)
         new_control_cost[1:sx, :] .= record.control_cost
         record.control_cost = new_control_cost
@@ -243,6 +250,7 @@ function Base.push!(record::LRLModelRecord, model::LRLModel)
         record.T_policy = new_T_policy
     end
     record.V[record.n, :] = model.V[:]
+    record.R[record.n, :] = model.R[:]
     record.control_cost[record.n, :] = control_cost(model)
     record.T[record.n, :, :] = model.T[:, :]
     record.T_policy[record.n, :, :] = model.T_policy[:, :]
@@ -253,6 +261,7 @@ function Base.iterate(record::LRLModelRecord, state=1)
     else
         (LRLModelSnapshot(
             record.V[state, :],
+            record.R[state, :],
             record.control_cost[state, :],
             record.T[state, :, :],
             record.T_policy[state, :, :]),
@@ -263,6 +272,7 @@ function Base.getindex(record::LRLModelRecord, i::Int)
     1 <= i <= length(record) || throw(BoundsError(record, i))
     LRLModelSnapshot(
         record.V[i, :],
+        record.R[i, :],
         record.control_cost[i, :],
         record.T[i, :, :],
         record.T_policy[i, :, :])
@@ -271,6 +281,7 @@ Base.getindex(record::LRLModelRecord, I) = LRLModelRecord(
     record.env,
     record.policy,
     record.V[I, :],
+    record.R[I, :],
     record.control_cost[I, :],
     record.T[I, :, :],
     record.T_policy[I, :, :],
