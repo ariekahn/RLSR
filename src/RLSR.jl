@@ -157,6 +157,67 @@ function make_env_big(rewards::Vector{Float64}=[0.5, 0.5, 0.5, 0.5])
 end
 export make_env_big
 
+
+function make_env_big_wide(rewards::Vector{Float64}=[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
+    A = [
+        0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    ]
+
+    locs_y = [0.0,
+              1.0, 1.0,
+              2.0, 2.0, 2.0, 2.0,
+              3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0,
+              4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]
+    locs_x = [0.5,
+              3/14, 11/14,
+              1/14, 5/14, 9/14, 13/14,
+              0.0, 1/7, 2/7, 3/7, 4/7, 5/7, 6/7, 1.0,
+              0.0, 1/7, 2/7, 3/7, 4/7, 5/7, 6/7, 1.0]
+              
+    isrewarded = [0,
+                  0, 0,
+                  0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0,
+                  1, 1, 1, 1, 1, 1, 1, 1]
+
+    rewards = [0,
+               0, 0,
+               0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 0,
+         rewards[1], rewards[2], rewards[3], rewards[4], rewards[5], rewards[6], rewards[7], rewards[8]]
+
+    terminal = [false,
+                false, false,
+                false, false, false, false,
+                false, false, false, false, false, false, false, false,
+                true, true, true, true, true, true, true, true]
+    
+    GraphEnvStochasticBinary(A, locs_x, locs_y, isrewarded, rewards; terminal)
+end
+export make_env_big_wide
+
 function make_env_normal(μ::Vector{Float64}=[0.0, 0.0, 0.0, 0.0], σ::Vector{Float64}=[1.0, 1.0, 1.0, 1.0])
     A = [
         0 1 1 0 0 0 0 0 0 0 0
@@ -201,11 +262,11 @@ function make_env_normal(μ::Vector{Float64}=[0.0, 0.0, 0.0, 0.0], σ::Vector{Fl
 end
 export make_env_normal
 
-function make_alternate_starts(ntrials::Int)
+function make_alternate_starts(ntrials::Int, valid_starts)
     # Balance trials sampled
     # Initial shuffle randomizes which state is overexpressed
     ntop = Int(floor(ntrials/2))
-    bottomstarts = shuffle(repeat(shuffle([4, 5, 6, 7]), Int(ceil(ntop / 4)))[1:ntop])
+    bottomstarts = shuffle(repeat(shuffle(valid_starts), Int(ceil(ntop / length(valid_starts))))[1:ntop])
     topstarts = ones(Int, length(bottomstarts))
     [topstarts bottomstarts]'[:]
 end
@@ -224,8 +285,8 @@ function run_trials(agent, startstates::Vector{Int})
     end
     (episodeRecord, agentRecord)
 end
-function run_trials(agent, ntrials::Int)
-    startstates = make_alternate_starts(ntrials)
+function run_trials(agent, ntrials::Int; valid_starts=[4,5,6,7])
+    startstates = make_alternate_starts(ntrials, valid_starts)
     run_trials(agent, startstates)
 end
 
@@ -236,8 +297,8 @@ function run_trials!(agent, startstates::Vector{Int}, agentRecord::R, episodeRec
         push!(episodeRecord, episode)
     end
 end
-function run_trials!(agent, ntrials::Int, agentRecord::R, episodeRecord::Vector{Episode}) where {R<:AbstractRecord}
-    startstates = make_alternate_starts(ntrials)
+function run_trials!(agent, ntrials::Int, agentRecord::R, episodeRecord::Vector{Episode}; valid_starts=[4,5,6,7]) where {R<:AbstractRecord}
+    startstates = make_alternate_starts(ntrials, valid_starts)
     run_trials!(agent, startstates, agentRecord, episodeRecord)
 end
 
@@ -273,8 +334,8 @@ function run_trials_drift(agent, startstates::Vector{Int}, σ; lb, ub)
     (episodeRecord, agentRecord, envRecord)
 end
 
-function run_trials_drift(agent, ntrials::Int, σ; lb, ub)
-    startstates = make_alternate_starts(ntrials)
+function run_trials_drift(agent, ntrials::Int, σ; lb, ub, valid_starts=[4,5,6,7])
+    startstates = make_alternate_starts(ntrials, valid_starts)
     run_trials_drift(agent, startstates, σ; lb=lb, ub=ub)
 end
 
@@ -290,8 +351,8 @@ function run_trials_drift!(agent, startstates::Vector{Int}, σ, agentRecord::R, 
     envRecord
 end
 
-function run_trials_drift!(agent, ntrials::Int, σ, agentRecord::R, episodeRecord::Vector{Episode}; lb, ub) where {R<:AbstractRecord}
-    startstates = make_alternate_starts(ntrials)
+function run_trials_drift!(agent, ntrials::Int, σ, agentRecord::R, episodeRecord::Vector{Episode}; lb, ub, valid_starts=[4,5,6,7]) where {R<:AbstractRecord}
+    startstates = make_alternate_starts(ntrials, valid_starts)
     run_trials_drift!(agent, startstates, σ, agentRecord::R, episodeRecord::Vector{Episode}; lb=lb, ub=ub)
 end
 
