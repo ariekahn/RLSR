@@ -28,10 +28,11 @@ struct LRLModel <: AbstractLRL
     D::Matrix{Float64}
     z_hat::Matrix{Float64}
     α::Float64
+    α2::Float64
     αT::Float64
     λ::Float64
 end
-function LRLModel(env, α, αT, λ, c)
+function LRLModel(env, α, α2, αT, λ, c)
     n = length(env)
     terminals = findall(env.terminal_states)
     nonterminals = findall(.!env.terminal_states)
@@ -50,7 +51,7 @@ function LRLModel(env, α, αT, λ, c)
     V = zeros(n)
     Q = zeros(n)
 
-    LRL = LRLModel(e_V, V, Q, R, T, T_policy, D, z_hat, α, αT, λ)
+    LRL = LRLModel(e_V, V, Q, R, T, T_policy, D, z_hat, α, α2, αT, λ)
 
     recompute_z!(env, LRL)
     recompute_V!(env, LRL)
@@ -58,40 +59,65 @@ function LRLModel(env, α, αT, λ, c)
 
     return LRL
 end
-LRLModel(env; α, αT, λ, c)::LRLModel = LRLModel(env, α, αT, λ, c)
+LRLModel(env, α, αT, λ, c)::LRLModel = LRLModel(env, α, α, αT, λ, c)
+function LRLModel(env; α, α2=nothing, αT, λ, c)::LRLModel
+    if isnothing(α2)
+        α2 = α
+    end
+    LRLModel(env, α, α2, αT, λ, c)
+end
 function model_name(model::M) where {M <: AbstractLRL} "LRL" end
 
 
-function LRLSoftmax(env; α, αT, λ, c, β)
+function LRLSoftmax(env; α, αT, λ, c, β, α2=nothing)
+    if isnothing(α2)
+        α2 = α
+    end
     LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicySoftmax(β)
     StateAgent(env, LRL, policy)
 end
-function LRLTwoStepSoftmax(env; α, αT, λ, c, β1, β2)
+
+function LRLTwoStepSoftmax(env; α, αT, λ, c, β1, β2, α2=nothing)
+    if isnothing(α2)
+        α2 = α
+    end
     LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicyTwoStepSoftmax(β1, β2)
     StateAgent(env, LRL, policy)
 end
 
-function LRLGreedy(env; α, αT, λ, c)
+function LRLGreedy(env; α, αT, λ, c, α2=nothing)
+    if isnothing(α2)
+        α2 = α
+    end
     LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicyGreedy()
     StateAgent(env, LRL, policy)
 end
 
-function LRL_ϵ_Greedy(env; α, αT, λ, c, ϵ)
+function LRL_ϵ_Greedy(env; α, αT, λ, c, ϵ, α2=nothing)
+    if isnothing(α2)
+        α2 = α
+    end
     LRL = LRLModel(env, α, αT, λ, c)
     policy = Policy_ϵ_Greedy(ϵ)
     StateAgent(env, LRL, policy)
 end
 
-function LRLOnPolicy(env; α, αT, λ, c)
+function LRLOnPolicy(env; α, αT, λ, c, α2=nothing)
+    if isnothing(α2)
+        α2 = α
+    end
     LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicyLRLOnPolicy()
     StateAgent(env, LRL, policy)
 end
 
-function LRLOnPolicy_ϵ_Greedy(env; α, αT, λ, c, ϵ)
+function LRLOnPolicy_ϵ_Greedy(env; α, αT, λ, c, ϵ, α2=nothing)
+    if isnothing(α2)
+        α2 = α
+    end
     LRL = LRLModel(env, α, αT, λ, c)
     policy = PolicyLRLOnPolicy_ϵ_Greedy(ϵ)
     StateAgent(env, LRL, policy)
@@ -106,9 +132,14 @@ function update_model_step!(agent::StateAgent{E, M, P}, s::Int, reward::Real, s�
 "Update reward, transitions, value and policy at the end of an episode"
 function update_model_end!(agent::StateAgent{E, M, P}, ep::Episode) where {E, M <: AbstractLRL, P}
     # Update terminal reward
+    if ep[1].S == 1
+        α = agent.model.α
+    else
+        α = agent.model.α2
+    end
     for (s, r) in ep
         if agent.env.terminal_states[s]
-            agent.model.R[s] = (agent.model.α * r) + ((1 - agent.model.α) * agent.model.R[s])
+            agent.model.R[s] = (α * r) + ((1 - α) * agent.model.R[s])
         end
     end
 
