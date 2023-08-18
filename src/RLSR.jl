@@ -64,7 +64,7 @@ export TD0TD1SRMBWeightedStateModel, TD0TD1SRMBWeightedAgent
 export WeightedModel, WeightedModel_ϵ_Greedy, WeightedModelTwoStepSoftmax, WeightedModelGreedy, WeightedModelSoftmax
 export StateModelSnapshot, StateModelRecord, ActionModelSnapshot, ActionModelRecord
 export ModelSnapshot, ModelRecord, Record
-export RunToDataFrame
+export LRLModelRecord
 
 function make_env(rewards::Vector{Float64}=[0.5, 0.5, 0.5, 0.5])
     A = [
