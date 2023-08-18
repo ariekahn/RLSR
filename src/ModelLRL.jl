@@ -73,7 +73,7 @@ function LRLSoftmax(env; α, αT, λ, c, β, α2=nothing)
     if isnothing(α2)
         α2 = α
     end
-    LRL = LRLModel(env, α, αT, λ, c)
+    LRL = LRLModel(env, α, α2, αT, λ, c)
     policy = PolicySoftmax(β)
     StateAgent(env, LRL, policy)
 end
@@ -82,7 +82,7 @@ function LRLTwoStepSoftmax(env; α, αT, λ, c, β1, β2, α2=nothing)
     if isnothing(α2)
         α2 = α
     end
-    LRL = LRLModel(env, α, αT, λ, c)
+    LRL = LRLModel(env, α, α2, αT, λ, c)
     policy = PolicyTwoStepSoftmax(β1, β2)
     StateAgent(env, LRL, policy)
 end
@@ -91,7 +91,7 @@ function LRLGreedy(env; α, αT, λ, c, α2=nothing)
     if isnothing(α2)
         α2 = α
     end
-    LRL = LRLModel(env, α, αT, λ, c)
+    LRL = LRLModel(env, α, α2, αT, λ, c)
     policy = PolicyGreedy()
     StateAgent(env, LRL, policy)
 end
@@ -100,7 +100,7 @@ function LRL_ϵ_Greedy(env; α, αT, λ, c, ϵ, α2=nothing)
     if isnothing(α2)
         α2 = α
     end
-    LRL = LRLModel(env, α, αT, λ, c)
+    LRL = LRLModel(env, α, α2, αT, λ, c)
     policy = Policy_ϵ_Greedy(ϵ)
     StateAgent(env, LRL, policy)
 end
@@ -109,7 +109,7 @@ function LRLOnPolicy(env; α, αT, λ, c, α2=nothing)
     if isnothing(α2)
         α2 = α
     end
-    LRL = LRLModel(env, α, αT, λ, c)
+    LRL = LRLModel(env, α, α2, αT, λ, c)
     policy = PolicyLRLOnPolicy()
     StateAgent(env, LRL, policy)
 end
@@ -118,7 +118,7 @@ function LRLOnPolicy_ϵ_Greedy(env; α, αT, λ, c, ϵ, α2=nothing)
     if isnothing(α2)
         α2 = α
     end
-    LRL = LRLModel(env, α, αT, λ, c)
+    LRL = LRLModel(env, α, α2, αT, λ, c)
     policy = PolicyLRLOnPolicy_ϵ_Greedy(ϵ)
     StateAgent(env, LRL, policy)
 end
