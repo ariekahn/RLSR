@@ -65,6 +65,7 @@ export WeightedModel, WeightedModel_ϵ_Greedy, WeightedModelTwoStepSoftmax, Weig
 export StateModelSnapshot, StateModelRecord, ActionModelSnapshot, ActionModelRecord
 export ModelSnapshot, ModelRecord, Record
 export LRLModelRecord
+export RunToDataFrame, RunToDataFrameBig
 
 function make_env(rewards::Vector{Float64}=[0.5, 0.5, 0.5, 0.5])
     A = [

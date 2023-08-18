@@ -170,3 +170,26 @@ function RunToDataFrame(episode_record::Vector{Episode}; subject=0)
     
     df
 end
+
+
+function RunToDataFrameBig(episode_record::Vector{Episode}; subject=0)
+    #      1
+    #  2       3
+    # 4 5     6 7
+    # 8 9    10 11
+    df = DataFrame()
+
+    df.state1 = [ep.S[1] for ep in episode_record]
+    df.state2 = [ep.S[2] < 8 ? ep.S[2] : missing for ep in episode_record]
+    df.state3 = [length(ep.S) > 2 && ep.S[3] < 8 ? ep.S[3] : missing for ep in episode_record]
+    df.state4 = [length(ep.S) > 3 && ep.S[3] < 16 ? ep.S[4] : missing for ep in episode_record]
+
+    # endState is 2-7 (2/3 for island-only trials, 4-7 for other trials)
+    df.endState = [ep.S[end] > 3 ? ep.S[end-1] : ep.S[end] for ep in episode_record]
+    df.reward = [ep.R[end] for ep in episode_record]
+
+    df.trial = 1:nrow(df)
+    df[!, :subject] .= string(subject)
+
+    df
+end
