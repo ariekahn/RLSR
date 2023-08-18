@@ -60,7 +60,7 @@ export MBModel, MB_ϵ_Greedy, MBGreedy, MBSoftmax, MBTwoStepSoftmax
 export MFTDModel, MFTD_ϵ_Greedy, MFTDGreedy, MFTDSoftmax
 export SARSAModel, SARSA_ϵ_Greedy, SARSAGreedy, SARSASoftmax
 export LRLModel, LRL_ϵ_Greedy, LRLGreedy, LRLSoftmax, LRLTwoStepSoftmax, LRLOnPolicy, LRLOnPolicy_ϵ_Greedy, recompute_policy!, recompute_V!, recompute_z!
-export TD0TD1SRMBWeightedModel, TD0TD1SRMBWeightedAgent
+export TD0TD1SRMBWeightedStateModel, TD0TD1SRMBWeightedAgent
 export WeightedModel, WeightedModel_ϵ_Greedy, WeightedModelTwoStepSoftmax, WeightedModelGreedy, WeightedModelSoftmax
 export StateModelSnapshot, StateModelRecord, ActionModelSnapshot, ActionModelRecord
 export ModelSnapshot, ModelRecord, Record
