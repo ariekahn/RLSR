@@ -18,7 +18,7 @@ z_hat: This is DP
 λ: Control Cost Scaling
 """
 abstract type AbstractLRL <: AbstractStateModel end
-struct LRLModel <: AbstractLRL
+mutable struct LRLModel <: AbstractLRL
     e_V::Vector{Float64}
     V::Vector{Float64}
     Q::Vector{Float64}
