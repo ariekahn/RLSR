@@ -35,6 +35,12 @@ function TD0TD1SRMBWeightedAgent(env, TD0Model, TD1Model, SRModel, MBModel, βTD
     StateAgent(env, model, policy)
 end
 
+function TD0TD1SRMBBiasWeightedAgent(env, TD0Model, TD1Model, SRModel, MBModel, βTD0, βTD1, βSR, βMB, βBoat, Bias1, Bias2)
+    model = TD0TD1SRMBWeightedStateModel(TD0Model, TD1Model, SRModel, MBModel)
+    policy = PolicyTD0TD1SRMBBiasTwoStepSoftmax(βTD0, βTD1, βSR, βMB, βBoat, Bias1, Bias2)
+    StateAgent(env, model, policy)
+end
+
 function update_model_start!(agent::StateAgent{E, M, P}) where {E, M <: TD0TD1SRMBWeightedStateModel, P}
     update_model_start!(StateAgent(agent.env, agent.model.TD0Model, agent.policy))
     update_model_start!(StateAgent(agent.env, agent.model.TD1Model, agent.policy))

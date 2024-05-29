@@ -48,10 +48,11 @@ include("Plotting.jl")
 
 export AbstractEnv, AbstractGraphEnv, AbstractPolicy, AbstractModel
 export GraphEnv, GraphEnvStochastic, GraphEnvStochasticBinary, edge_to_ind
-export sample_reward, get_reward_state, update_rewards!, drift_rewards!
+export sample_reward, get_reward_state, update_rewards!, drift_rewards!, run_trials!
 export sample_successor
 export Observation, Episode
 export PolicyGreedy, Policy_ϵ_Greedy, PolicySoftmax, PolicyTwoStepSoftmax
+export PolicyTD0TD1SRMBTwoStepSoftmax, PolicyTD0TD1SRMBBiasTwoStepSoftmax
 export StateAgent, ActionAgent, model_name, policy_name, active_episode!, passive_episode!, blind_episode
 export plot_graph, plot_graph_full, plot_values, plot_values_full
 
@@ -60,7 +61,7 @@ export MBModel, MB_ϵ_Greedy, MBGreedy, MBSoftmax, MBTwoStepSoftmax
 export MFTDModel, MFTD_ϵ_Greedy, MFTDGreedy, MFTDSoftmax
 export SARSAModel, SARSA_ϵ_Greedy, SARSAGreedy, SARSASoftmax
 export LRLModel, LRL_ϵ_Greedy, LRLGreedy, LRLSoftmax, LRLTwoStepSoftmax, LRLOnPolicy, LRLOnPolicy_ϵ_Greedy, recompute_policy!, recompute_V!, recompute_z!
-export TD0TD1SRMBWeightedStateModel, TD0TD1SRMBWeightedAgent
+export TD0TD1SRMBWeightedStateModel, TD0TD1SRMBWeightedAgent, TD0TD1SRMBBiasWeightedAgent
 export WeightedModel, WeightedModel_ϵ_Greedy, WeightedModelTwoStepSoftmax, WeightedModelGreedy, WeightedModelSoftmax
 export StateModelSnapshot, StateModelRecord, ActionModelSnapshot, ActionModelRecord
 export ModelSnapshot, ModelRecord, Record

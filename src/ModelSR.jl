@@ -1,5 +1,5 @@
 abstract type AbstractSR <: AbstractStateModel end
-struct SRModel <: AbstractSR
+mutable struct SRModel <: AbstractSR
     M::Matrix{Float64}
     R::Vector{Float64}
     V::Vector{Float64}

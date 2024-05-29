@@ -1,5 +1,5 @@
 abstract type AbstractMFTD <: AbstractStateModel end
-struct MFTDModel <: AbstractMFTD
+mutable struct MFTDModel <: AbstractMFTD
     V::Vector{Float64}
     Q::Vector{Float64}
     trace::Vector{Float64}

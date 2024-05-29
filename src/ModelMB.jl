@@ -8,7 +8,7 @@ The Q-value of an action should then be R[s′] + γ * V[s′]
 
 """
 abstract type AbstractMB <: AbstractStateModel end
-struct MBModel <: AbstractMB
+mutable struct MBModel <: AbstractMB
     V::Vector{Float64}
     Q::Vector{Float64}
     R::Vector{Float64}
