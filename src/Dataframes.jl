@@ -441,8 +441,8 @@ function RunToDataFrame(episode_record::Vector{Episode}; subject=0)
 
     # Last Traversal Island Reward
     # During our last traversal at island 1/2, what was the outcome?
-    df[!, :td0Island1Reg] .= copy(df[!, :prior1TraversalRewardAtIsland1])
-    df[!, :td0Island2Reg] .= copy(df[!, :prior1TraversalRewardAtIsland1])
+    df[!, :td0Island1Reg] = Vector{Union{Missing, Float64}}(missing, length(episode_record))
+    df[!, :td0Island2Reg] = Vector{Union{Missing, Float64}}(missing, length(episode_record))
     prior1TraversalIsland1BoatReward = missing
     prior1TraversalIsland2BoatReward = missing
     for i in 1:nrow(df)
